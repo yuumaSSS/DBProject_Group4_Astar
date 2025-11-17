@@ -7,7 +7,7 @@ type Product struct {
 	UnitPrice   float64 `json:"unit_price"`
 }
 
-type Customer struct {
+type Customers struct {
 	CustomerID    int    `json:"customer_id"`
 	FullName      string `json:"full_name"`
 	Username      string `json:"username"`
@@ -24,7 +24,7 @@ type Orders struct {
 	CustomerID  int     `json:"customer_id"`
 }
 
-type OrderDetail struct {
+type Order_Details struct {
 	DetailID     int     `json:"detail_id"`
 	QuantitySold int     `json:"quantity_sold"`
 	Subtotal     float64 `json:"subtotal"`

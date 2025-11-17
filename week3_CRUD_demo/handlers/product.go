@@ -139,9 +139,9 @@ func GetCustomers(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var customers []models.Customer
+	var customers []models.Customers
 	for rows.Next() {
-		var c models.Customer
+		var c models.Customers
 		if err := rows.Scan(&c.CustomerID, &c.FullName, &c.Username, &c.ContactNumber, &c.City, &c.PostCode, &c.Street); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -157,7 +157,7 @@ func GetCustomer(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, _ := strconv.Atoi(params["id"])
 
-	var c models.Customer
+	var c models.Customers
 	err := config.DB.QueryRow("SELECT CustomerID, FullName, Username, ContactNumber, City, PostCode, Street FROM Customers WHERE CustomerID = $1", id).
 		Scan(&c.CustomerID, &c.FullName, &c.Username, &c.ContactNumber, &c.City, &c.PostCode, &c.Street)
 
@@ -175,7 +175,7 @@ func GetCustomer(w http.ResponseWriter, r *http.Request) {
 func CreateCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var c models.Customer
+	var c models.Customers
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -198,7 +198,7 @@ func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, _ := strconv.Atoi(params["id"])
 
-	var c models.Customer
+	var c models.Customers
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
