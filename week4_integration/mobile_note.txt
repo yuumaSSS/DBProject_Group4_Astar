@@ -1,5 +1,0 @@
-Aplikasi mobile tidak akan di push ke repository ini!
-
-Hal ini kami pertimbangkan,
-karena aplikasi mobile berlaku sebagai admin dari aplikasi yang kami buat,
-sehingga akan sangat rentan di reverse engineering atau perilaku berbahaya lainnya.
