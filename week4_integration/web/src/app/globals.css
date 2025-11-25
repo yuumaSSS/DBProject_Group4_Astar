@@ -1,7 +1,92 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/MonocraftNerdFontComplete--01.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/MonocraftNerdFontComplete-Italic-02.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/MonocraftNerdFontComplete-Black-03.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/MonocraftNerdFontComplete-Black-Italic-04.ttf") format("truetype");
+  font-weight: 900;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/MonocraftNerdFontComplete-Bold-05.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/MonocraftNerdFontComplete-Bold-Italic-06.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/MonocraftNerdFontComplete-SemiBold-07.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/MonocraftNerdFontComplete-SemiBold-Italic-08.ttf") format("truetype");
+  font-weight: 600;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/MonocraftNerdFontComplete-Light-09.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/MonocraftNerdFontComplete-Light-Italic-10.ttf") format("truetype");
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/MonocraftNerdFontComplete-ExtraLight-11.ttf") format("truetype");
+  font-weight: 200;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Monocraft";
+  src: url("/fonts/MonocraftNerdFontComplete-ExtraLight-Italic-12.ttf") format("truetype");
+  font-weight: 200;
+  font-style: italic;
+}
+
+/* Lu mau background putih → hentikan semua variable dynamic */
 :root {
-  --background: #ffffff;
+  --background: #ffffff !important;
   --foreground: #171717;
 }
 
@@ -9,18 +94,20 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: "Monocraft";
 }
 
+/* Matikan dark mode override supaya nggak ngubah background */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff; /* tetep putih */
+    --foreground: #171717;
   }
 }
 
+/* Pastikan body memang putih */
 body {
-  background: var(--background);
+  background-color: #ffffff !important;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Monocraft", monospace;
 }
