@@ -22,7 +22,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   // Nanti diganti pakai fetch data aseli
   void _startFakeJob() {
-    // Simulasi loading selama 3 detik
+    // Simulasi loading
     const oneSec = Duration(milliseconds: 100);
     Timer.periodic(oneSec, (Timer timer) {
       setState(() {
@@ -46,9 +46,9 @@ class _LoadingScreenState extends State<LoadingScreen> {
     if (progress < 0.3) {
       return Colors.red;
     } else if (progress < 0.7) {
-      return Colors.orange; // Pertengahan oranye
+      return Colors.orange;
     } else {
-      return Colors.green[700]!; // Selesai hijau
+      return Colors.green[700]!;
     }
   }
 
@@ -73,10 +73,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
               const SizedBox(height: 30),
 
               LinearProgressIndicator(
-                value: _progressValue, // Nilai progress 0.0 - 1.0
+                value: _progressValue,
                 backgroundColor: Colors.grey[200],
-                color: Color(0xFF5B6EE1), // Warna bar
-                minHeight: 10, // Ketebalan bar
+                color: Color(0xFF5B6EE1),
+                minHeight: 10,
                 borderRadius: BorderRadius.circular(10),
               ),
 
@@ -93,7 +93,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
               const SizedBox(height: 5),
 
-              // Text Persentase
               Text(
                 "${(_progressValue * 100).clamp(0, 100).toInt()}%",
                 style: TextStyle(

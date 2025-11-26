@@ -1,17 +1,97 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'screens/login.dart';
+import 'screens/loading.dart';
+import 'screens/wrapper.dart'; 
+import 'screens/stock.dart';
+import 'screens/manage.dart';
+import 'screens/about.dart';
 
 void main() {
   runApp(const MyApp());
 }
+
+final GoRouter _router = GoRouter(
+  initialLocation: '/',
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, state) => LoginScreen(),
+    ),
+    
+    GoRoute(
+      path: '/loading',
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: const LoadingScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.ease;
+            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            return SlideTransition(position: animation.drive(tween), child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        );
+      },
+    ),
+
+    StatefulShellRoute.indexedStack(
+      pageBuilder: (context, state, navigationShell) {
+        return CustomTransitionPage(
+          key: state.pageKey,
+          child: MainWrapper(navigationShell: navigationShell),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        );
+      },
+      
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/stock',
+              builder: (context, state) => const StockScreen()
+            ),
+          ],
+        ),
+
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/manage',
+              builder: (context, state) => const ManageScreen()
+            ),
+          ],
+        ),
+
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/about',
+              builder: (context, state) => const AboutScreen()
+            ),
+          ],
+        ),
+      ],
+    ),
+  ],
+);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: LoginScreen(),
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      routerConfig: _router,
     );
   }
 }
