@@ -14,44 +14,47 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 40),
-      child: Column(
-        children: [
-          const Header(title: 'About Us'),
-
-          _ProfileItem(
-            name: 'Thufail\nBahir Al Bariq',
-            roles: '@UI/UX\n@MobApps_Dev\n@Backend_Dev',
-            imagePath: 'assets/images/icons/thufail.png',
-            githubUrl: 'https://github.com/yuumaSSS',
-            isImageLeft: true, // Gambar di kiri
-            onTap: _launchGithub,
+    return Column(
+      children: [
+        const Header(title: 'About Us'),
+        Expanded(
+          child: Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ProfileItem(
+                    name: 'Thufail\nBahir Al Bariq',
+                    roles: '@UI/UX\n@MobApps_Dev\n@Backend_Dev',
+                    imagePath: 'assets/images/icons/thufail.png',
+                    githubUrl: 'https://github.com/yuumaSSS',
+                    isImageLeft: true,
+                    onTap: _launchGithub,
+                  ),
+                  const SizedBox(height: 40),
+                  _ProfileItem(
+                    name: 'Dhimas\nPutra Sulistio',
+                    roles: '@UI/UX\n@Frontend_Dev',
+                    imagePath: 'assets/images/icons/dhimas.png',
+                    githubUrl: 'https://github.com/muddglobb',
+                    isImageLeft: false,
+                    onTap: _launchGithub,
+                  ),
+                  const SizedBox(height: 40),
+                  _ProfileItem(
+                    name: 'Maulana Faris\nAl Ghifari',
+                    roles: '@UI/UX\n@Frontend_Dev',
+                    imagePath: 'assets/images/icons/faris.png',
+                    githubUrl: 'https://github.com/MaulanaFarisA',
+                    isImageLeft: true,
+                    onTap: _launchGithub,
+                  ),
+                ],
+              ),
+            ),
           ),
-
-          const SizedBox(height: 40),
-
-          _ProfileItem(
-            name: 'Dhimas\nPutra Sulistio',
-            roles: '@UI/UX\n@Frontend_Dev',
-            imagePath: 'assets/images/icons/dhimas.png',
-            githubUrl: 'https://github.com/muddglobb',
-            isImageLeft: false, // Gambar di kanan (Zigzag)
-            onTap: _launchGithub,
-          ),
-
-          const SizedBox(height: 40),
-
-          _ProfileItem(
-            name: 'Maulana Faris\nAl Ghifari',
-            roles: '@UI/UX\n@Frontend_Dev',
-            imagePath: 'assets/images/icons/faris.png',
-            githubUrl: 'https://github.com/MaulanaFarisA',
-            isImageLeft: true, // Gambar di kiri
-            onTap: _launchGithub,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -81,7 +84,7 @@ class _ProfileItem extends StatelessWidget {
       child: Container(
         height: 100,
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.transparent), 
+          border: Border.all(color: Colors.transparent),
         ),
         child: Image.asset(
           imagePath,
@@ -90,7 +93,6 @@ class _ProfileItem extends StatelessWidget {
       ),
     );
 
-    // Widget Text
     Widget textWidget = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -106,7 +108,7 @@ class _ProfileItem extends StatelessWidget {
         Text(
           roles,
           style: const TextStyle(
-            fontSize: 15, 
+            fontSize: 15,
             fontFamily: 'Monocraft',
             color: Color(0xFF455CE7),
           ),
