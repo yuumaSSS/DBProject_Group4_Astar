@@ -1,16 +1,11 @@
--- Drop tables jika sudah ada
-DROP TABLE IF EXISTS Inventory CASCADE;
-DROP TABLE IF EXISTS Order_Details CASCADE;
-DROP TABLE IF EXISTS Orders CASCADE;
-DROP TABLE IF EXISTS Customers CASCADE;
-DROP TABLE IF EXISTS Product CASCADE;
-
 -- Tabel Product
 CREATE TABLE Product (
     ProductID SERIAL PRIMARY KEY,
     ProductName VARCHAR(100) NOT NULL,
     Category VARCHAR(50) NOT NULL,
-    UnitPrice DECIMAL(10, 2) NOT NULL CHECK (UnitPrice >= 0)
+    Description TEXT NOT NULL,
+    UnitPrice DECIMAL(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    Preview BYTEA NOT NULL
 );
 
 -- Tabel Customers
@@ -46,7 +41,7 @@ CREATE TABLE Order_Details (
 
 -- Tabel Inventory
 CREATE TABLE Inventory (
-    InventoryID SERIAL PRIMARY KEY,
+    InventoryID SERIAL PRIMARY KEY AUTO_INCREMENT,
     Quantity INT NOT NULL CHECK (Quantity >= 0),
     LastUpdated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ProductID INT NOT NULL UNIQUE,
