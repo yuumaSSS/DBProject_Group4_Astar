@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class SignInButton extends StatelessWidget {
   const SignInButton({super.key});
@@ -10,7 +11,7 @@ class SignInButton extends StatelessWidget {
       borderRadius: BorderRadius.all(Radius.zero),
       child: InkWell(
         onTap: () {
-          debugPrint('Tap tap tap');
+          context.go('/loading');
         },
         splashColor: Color(0xFF455CE7),
         borderRadius: BorderRadius.all(Radius.zero),
@@ -19,14 +20,14 @@ class SignInButton extends StatelessWidget {
             start: 5,
             end: 5,
             top: 1,
-            bottom: 1
+            bottom: 1,
           ),
           child: Text(
             'Sign In',
             style: TextStyle(
               color: Colors.white,
               fontFamily: 'Monocraft',
-              fontSize: 20
+              fontSize: 20,
             ),
           ),
         ),

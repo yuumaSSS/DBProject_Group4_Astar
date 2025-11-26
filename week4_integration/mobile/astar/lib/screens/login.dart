@@ -21,12 +21,14 @@ class LoginScreen extends StatelessWidget {
                 height: 180,
                 child: Image.asset(
                   'assets/images/icons/logo_login.png',
-                  fit: BoxFit.contain,
+                  fit: BoxFit.contain
                 ),
               ),
               const SizedBox(height: 40),
+
               InputPass(controller: passwordController),
               const SizedBox(height: 15),
+              
               SignInButton()
             ],
           ),
