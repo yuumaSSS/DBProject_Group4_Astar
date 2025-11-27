@@ -37,16 +37,19 @@ final GoRouter _router = GoRouter(
       },
     ),
 
-    StatefulShellRoute.indexedStack(
+    StatefulShellRoute(
+      navigatorContainerBuilder: (context, navigationShell, children) {
+        return MainWrapper(
+          navigationShell: navigationShell, 
+          children: children,
+        );
+      },
       pageBuilder: (context, state, navigationShell) {
         return CustomTransitionPage(
           key: state.pageKey,
-          child: MainWrapper(navigationShell: navigationShell),
+          child: navigationShell,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
+            return FadeTransition(opacity: animation, child: child);
           },
           transitionDuration: const Duration(milliseconds: 500),
         );

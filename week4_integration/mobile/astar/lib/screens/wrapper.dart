@@ -2,18 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/bottom_nav.dart';
 
-class MainWrapper extends StatelessWidget {
+class MainWrapper extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
+  final List<Widget> children;
 
   const MainWrapper({
     super.key,
     required this.navigationShell,
+    required this.children,
   });
 
+  @override
+  State<MainWrapper> createState() => _MainWrapperState();
+}
+
+class _MainWrapperState extends State<MainWrapper> {
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   void _goBranch(int index) {
-    navigationShell.goBranch(
+    widget.navigationShell.goBranch(
       index,
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
   }
 
@@ -22,16 +35,32 @@ class MainWrapper extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        top: true, 
+        top: true,
         bottom: false,
-        child: navigationShell,
-      ),
-      
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.black,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          reverseDuration: Duration.zero,
+          switchInCurve: Curves.easeOut,
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.0, 0.1), 
+                end: Offset.zero,
+              ).animate(animation),
+              child: FadeTransition(
+                opacity: animation,
+                child: child,
+              ),
+            );
+          },
+          child: KeyedSubtree(
+            key: ValueKey<int>(widget.navigationShell.currentIndex),
+            child: widget.children[widget.navigationShell.currentIndex],
+          ),
         ),
-        
+      ),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(color: Colors.black),
         child: SafeArea(
           top: false,
           bottom: true,
@@ -45,24 +74,28 @@ class MainWrapper extends StatelessWidget {
                   label: "Stock",
                   imgPath: "assets/images/icons/stock.png",
                   activeImgPath: "assets/images/icons/stock_c.png",
-                  isSelected: navigationShell.currentIndex == 0,
-                  onTap: () => _goBranch(0),
+                  isSelected: widget.navigationShell.currentIndex == 0,
+                  onTap: () {
+                    _goBranch(0);
+                  },
                 ),
-                
                 BottomNav(
                   label: "Manage",
                   imgPath: "assets/images/icons/manage.png",
                   activeImgPath: "assets/images/icons/manage_c.png",
-                  isSelected: navigationShell.currentIndex == 1,
-                  onTap: () => _goBranch(1),
+                  isSelected: widget.navigationShell.currentIndex == 1,
+                  onTap: () {
+                    _goBranch(1);
+                  },
                 ),
-
                 BottomNav(
                   label: "About",
                   imgPath: "assets/images/icons/about.png",
                   activeImgPath: "assets/images/icons/about_c.png",
-                  isSelected: navigationShell.currentIndex == 2,
-                  onTap: () => _goBranch(2),
+                  isSelected: widget.navigationShell.currentIndex == 2,
+                  onTap: () {
+                    _goBranch(2);
+                  },
                 ),
               ],
             ),
