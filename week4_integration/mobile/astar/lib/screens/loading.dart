@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:just_audio/just_audio.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -12,34 +13,52 @@ class LoadingScreen extends StatefulWidget {
 class _LoadingScreenState extends State<LoadingScreen> {
   double _progressValue = 0.0;
   String _statusText = "Loading data...";
+  late AudioPlayer player;
 
   @override
   void initState() {
     super.initState();
-
+    player = AudioPlayer();
+    _initAudio(); 
     _startFakeJob();
   }
 
-  // Nanti diganti pakai fetch data aseli
+  Future<void> _initAudio() async {
+    try {
+      await player.setAsset('assets/sounds/anime-chill-music-remix.mp3');
+      await player.setVolume(5.0); 
+      player.play();
+    } catch (e) {
+      debugPrint("Error loading audio: $e");
+    }
+  }
+
   void _startFakeJob() {
-    // Simulasi loading
-    const oneSec = Duration(milliseconds: 100);
-    Timer.periodic(oneSec, (Timer timer) {
-      setState(() {
-        if (_progressValue >= 1.0) {
-          timer.cancel();
-          _statusText = "Selesai!";
+    const oneSec = Duration(milliseconds: 1000);
+    Timer.periodic(oneSec, (Timer timer) async {
+      if (mounted) {
+        setState(() {
+          if (_progressValue >= 1.0) {
+            timer.cancel();
+            _statusText = "Done!";
+            
+            player.stop();
+            context.go('/stock');
+          } else {
+            _progressValue += 0.05; 
 
-          context.go('/stock');
-        } else {
-          _progressValue += 0.05; // Tambah 5% setiap 100ms
-
-          // Ubah text status berdasarkan progress (Simulasi)
-          if (_progressValue > 0.3) _statusText = "Processing data...";
-          if (_progressValue > 0.7) _statusText = "Finalization...";
-        }
-      });
+            if (_progressValue > 0.3) _statusText = "Processing data...";
+            if (_progressValue > 0.7) _statusText = "Finalization...";
+          }
+        });
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    player.dispose();
+    super.dispose();
   }
 
   Color _progressPercentColor(double progress) {
@@ -75,7 +94,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
               LinearProgressIndicator(
                 value: _progressValue,
                 backgroundColor: Colors.grey[200],
-                color: Color(0xFF5B6EE1),
+                color: const Color(0xFF5B6EE1),
                 minHeight: 10,
                 borderRadius: BorderRadius.circular(10),
               ),

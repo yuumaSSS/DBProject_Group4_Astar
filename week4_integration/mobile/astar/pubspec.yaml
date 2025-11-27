@@ -37,6 +37,7 @@ dependencies:
   go_router: ^17.0.0
   url_launcher: ^6.3.2
   flutter_launcher_icons: ^0.14.4
+  just_audio: ^0.10.5
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +77,8 @@ flutter:
     - assets/images/icons/thufail.png
     - assets/images/icons/dhimas.png
     - assets/images/icons/faris.png
+
+    - assets/sounds/anime-chill-music-remix.mp3
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
