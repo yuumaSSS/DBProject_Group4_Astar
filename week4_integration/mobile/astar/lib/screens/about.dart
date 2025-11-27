@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:just_audio/just_audio.dart';
 import '../widgets/header.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -59,7 +60,7 @@ class AboutScreen extends StatelessWidget {
   }
 }
 
-class _ProfileItem extends StatelessWidget {
+class _ProfileItem extends StatefulWidget {
   final String name;
   final String roles;
   final String imagePath;
@@ -77,18 +78,72 @@ class _ProfileItem extends StatelessWidget {
   });
 
   @override
+  State<_ProfileItem> createState() => _ProfileItemState();
+}
+
+class _ProfileItemState extends State<_ProfileItem> {
+  late AudioPlayer _player;
+
+  @override
+  void initState() {
+    super.initState();
+    _player = AudioPlayer();
+    _initAudio();
+  }
+
+  Future<void> _initAudio() async {
+    try {
+      await _player.setAsset('assets/sounds/mc-hurt.mp3');
+    } catch (e) {
+      debugPrint("Error loading audio: $e");
+    }
+  }
+
+  Future<void> _playSound() async {
+    try {
+      await _player.seek(Duration.zero);
+      await _player.setVolume(5.0);
+      await _player.play();
+    } catch (e) {
+      debugPrint("Error playing audio: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    Widget imageWidget = InkWell(
-      onLongPress: () => onTap(githubUrl),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        height: 100,
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.transparent),
-        ),
-        child: Image.asset(
-          imagePath,
-          fit: BoxFit.contain,
+    Widget imageWidget = Container(
+      height: 100,
+      width: 100,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.transparent),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(widget.imagePath, fit: BoxFit.contain),
+            ),
+            Positioned.fill(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onLongPress: () => widget.onTap(widget.githubUrl),
+                  splashColor: Colors.red.withAlpha(128),
+                  onTap: () {
+                    _playSound();
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -97,7 +152,7 @@ class _ProfileItem extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          name,
+          widget.name,
           style: const TextStyle(
             fontSize: 15,
             fontFamily: 'Monocraft',
@@ -106,7 +161,7 @@ class _ProfileItem extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          roles,
+          widget.roles,
           style: const TextStyle(
             fontSize: 15,
             fontFamily: 'Monocraft',
@@ -119,7 +174,7 @@ class _ProfileItem extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: isImageLeft
+      children: widget.isImageLeft
           ? [imageWidget, textWidget]
           : [textWidget, imageWidget],
     );
