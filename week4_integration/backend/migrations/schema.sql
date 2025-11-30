@@ -1,56 +1,55 @@
--- Tabel Product
-CREATE TABLE Product (
-    ProductID SERIAL PRIMARY KEY,
-    ProductName VARCHAR(100) NOT NULL,
-    Category VARCHAR(50) NOT NULL,
-    Description TEXT NOT NULL,
-    UnitPrice DECIMAL(10, 2) NOT NULL CHECK (UnitPrice >= 0),
-    Preview BYTEA NOT NULL
+-- Tabel Users
+CREATE TABLE users (
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    
+    username VARCHAR(50) NOT NULL UNIQUE,
+    full_name VARCHAR(100) NOT NULL,
+    phone_number VARCHAR(20) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+    
+    street VARCHAR(100) NOT NULL,
+    city VARCHAR(50) NOT NULL,
+    post_code VARCHAR(10) NOT NULL,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabel Customers
-CREATE TABLE Customers (
-    CustomerID SERIAL PRIMARY KEY,
-    FullName VARCHAR(100) NOT NULL,
-    Username VARCHAR(50) NOT NULL UNIQUE,
-    ContactNumber VARCHAR(20) NOT NULL,
-    City VARCHAR(50) NOT NULL,
-    PostCode VARCHAR(10) NOT NULL,
-    Street VARCHAR(100) NOT NULL
+-- Tabel Products
+CREATE TABLE products (
+    product_id SERIAL PRIMARY KEY,
+    product_name VARCHAR(100) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    description TEXT NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL CHECK (unit_price >= 0),
+    image_url TEXT NOT NULL,
+    stock INT NOT NULL DEFAULT 0 CHECK (stock >= 0),
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabel Orders
-CREATE TABLE Orders (
-    OrderID SERIAL PRIMARY KEY,
-    OrderDate DATE NOT NULL DEFAULT CURRENT_DATE,
-    TotalAmount DECIMAL(12, 2) NOT NULL CHECK (TotalAmount >= 0),
-    CustomerID INT NOT NULL,
-    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE CASCADE
+CREATE TABLE orders (
+    order_id SERIAL PRIMARY KEY,
+    user_id UUID NOT NULL,
+    product_id INT NOT NULL,
+    
+    quantity INT NOT NULL CHECK (quantity > 0),
+    total_amount DECIMAL(12, 2) NOT NULL CHECK (total_amount >= 0),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE RESTRICT
 );
 
--- Tabel Order_Details
-CREATE TABLE Order_Details (
-    DetailID SERIAL PRIMARY KEY,
-    QuantitySold INT NOT NULL CHECK (QuantitySold > 0),
-    Subtotal DECIMAL(12, 2) NOT NULL CHECK (Subtotal >= 0),
-    OrderID INT NOT NULL,
-    ProductID INT NOT NULL,
-    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE CASCADE,
-    FOREIGN KEY (ProductID) REFERENCES Product(ProductID) ON DELETE RESTRICT
-);
+-- Enable RLS
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 
--- Tabel Inventory
-CREATE TABLE Inventory (
-    InventoryID SERIAL PRIMARY KEY AUTO_INCREMENT,
-    Quantity INT NOT NULL CHECK (Quantity >= 0),
-    LastUpdated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ProductID INT NOT NULL UNIQUE,
-    FOREIGN KEY (ProductID) REFERENCES Product(ProductID) ON DELETE CASCADE
-);
-
--- Index untuk performa query yang lebih baik
-CREATE INDEX idx_orders_customer ON Orders(CustomerID);
-CREATE INDEX idx_orders_date ON Orders(OrderDate);
-CREATE INDEX idx_order_details_order ON Order_Details(OrderID);
-CREATE INDEX idx_order_details_product ON Order_Details(ProductID);
-CREATE INDEX idx_inventory_product ON Inventory(ProductID);
+-- Indexing
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_products_category ON products(category);
+CREATE INDEX idx_orders_user ON orders(user_id);
