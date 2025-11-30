@@ -25,6 +25,21 @@ import (
 func main() {
 	_ = godotenv.Load("base.env")
 
+	certContent := os.Getenv("DB_ROOT_CERT_CONTENT")
+	if certContent != "" {
+		decoded, err := base64.StdEncoding.DecodeString(certContent)
+		if err != nil {
+			log.Fatalf("Gagal decode sertifikat SSL: %v", err)
+		}
+
+		fileName := "prod-ca-2021.crt" 
+		err = os.WriteFile(fileName, decoded, 0644)
+		if err != nil {
+			log.Fatalf("Gagal menulis file sertifikat SSL: %v", err)
+		}
+		log.Println("File sertifikat SSL berhasil dibuat dari Environment Variable")
+	}
+
 	dbUrl := os.Getenv("DATABASE_URL")
 	if dbUrl == "" {
 		dbUser := os.Getenv("DB_USER")
