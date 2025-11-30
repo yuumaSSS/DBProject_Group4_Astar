@@ -9,31 +9,36 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GestureDetector(
+      onTap: () {
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(50.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              SizedBox(
-                height: 180,
-                child: Image.asset(
-                  'assets/images/icons/logo_login.png',
-                  fit: BoxFit.contain
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(50.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                SizedBox(
+                  height: 180,
+                  child: Image.asset(
+                    'assets/images/icons/logo_login.png',
+                    fit: BoxFit.contain
+                  ),
                 ),
-              ),
-              const SizedBox(height: 40),
+                const SizedBox(height: 40),
 
-              InputPass(controller: passwordController),
-              const SizedBox(height: 15),
+                InputPass(controller: passwordController),
+                const SizedBox(height: 15),
               
-              SignInButton()
-            ],
+                SignInButton()
+              ],
+            ),
           ),
         ),
-      ),
+      )
     );
   }
 }

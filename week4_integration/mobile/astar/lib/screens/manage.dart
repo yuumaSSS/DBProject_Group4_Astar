@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../widgets/header.dart';
 
 class ManageScreen extends StatelessWidget {
@@ -18,7 +19,7 @@ class ManageScreen extends StatelessWidget {
                 _MenuButton(
                   label: 'ADD',
                   color: const Color(0xFF008000),
-                  onTap: () => debugPrint('Tap ADD'),
+                  onTap: () => context.go('/manage/add'),
                 ),
                 
                 const SizedBox(height: 20),
@@ -26,7 +27,7 @@ class ManageScreen extends StatelessWidget {
                 _MenuButton(
                   label: 'UPDATE',
                   color: const Color(0xFF5B6EE1),
-                  onTap: () => debugPrint('Tap EDIT'),
+                  onTap: () => context.go('/manage/update'),
                 ),
 
                 const SizedBox(height: 20),
@@ -34,7 +35,7 @@ class ManageScreen extends StatelessWidget {
                 _MenuButton(
                   label: 'DELETE',
                   color: const Color(0xFFFF0004),
-                  onTap: () => debugPrint('Tap DELETE'),
+                  onTap: () => context.go('/manage/delete'),
                 ),
               ],
             ),
@@ -65,6 +66,7 @@ class _MenuButton extends StatelessWidget {
         onTap: onTap,
         splashColor: const Color.fromARGB(255, 216, 216, 216),
         borderRadius: BorderRadius.circular(20),
+        enableFeedback: false,
         child: Container(
           width: 200,
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
