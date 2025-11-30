@@ -6,6 +6,6 @@ sql:
     database:
       uri: "postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
     gen:
-      package: ''
+      package: 'db'
       sql_package: "pgx/v5"
       out: 'db'

@@ -13,8 +13,9 @@ class SignInButton extends StatelessWidget {
         onTap: () {
           context.go('/loading');
         },
-        splashColor: Color(0xFF455CE7),
+        splashColor: const Color.fromARGB(255, 216, 216, 216),
         borderRadius: BorderRadius.all(Radius.zero),
+        enableFeedback: false,
         child: Padding(
           padding: EdgeInsetsGeometry.directional(
             start: 5,

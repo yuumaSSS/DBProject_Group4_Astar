@@ -34,7 +34,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 
   void _startFakeJob() {
-    const oneSec = Duration(milliseconds: 1000);
+    const oneSec = Duration(milliseconds: 10);
     Timer.periodic(oneSec, (Timer timer) async {
       if (mounted) {
         setState(() {

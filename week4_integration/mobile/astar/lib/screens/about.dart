@@ -3,14 +3,54 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:just_audio/just_audio.dart';
 import '../widgets/header.dart';
 
-class AboutScreen extends StatelessWidget {
+class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
+
+  @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
+  late AudioPlayer _player;
+
+  @override
+  void initState() {
+    super.initState();
+    _player = AudioPlayer();
+    _initAudio();
+  }
+
+  Future<void> _initAudio() async {
+    try {
+      await _player.setVolume(5.0);
+      await _player.setAsset('assets/sounds/mc-hurt.mp3');
+    } catch (e) {
+      debugPrint("Error loading audio: $e");
+    }
+  }
+
+  Future<void> _playSound() async {
+    try {
+      await _player.seek(Duration.zero);
+      if (!_player.playing) {
+        await _player.play();
+      }
+    } catch (e) {
+      debugPrint("Error playing audio: $e");
+    }
+  }
 
   Future<void> _launchGithub(String urlString) async {
     final Uri url = Uri.parse(urlString);
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       throw Exception('Failed to connect: $url');
     }
+  }
+
+  @override
+  void dispose() {
+    _player.dispose(); 
+    super.dispose();
   }
 
   @override
@@ -30,7 +70,8 @@ class AboutScreen extends StatelessWidget {
                     imagePath: 'assets/images/icons/thufail.png',
                     githubUrl: 'https://github.com/yuumaSSS',
                     isImageLeft: true,
-                    onTap: _launchGithub,
+                    onUrlTap: _launchGithub,
+                    onSoundTap: _playSound, 
                   ),
                   const SizedBox(height: 40),
                   _ProfileItem(
@@ -39,7 +80,8 @@ class AboutScreen extends StatelessWidget {
                     imagePath: 'assets/images/icons/dhimas.png',
                     githubUrl: 'https://github.com/muddglobb',
                     isImageLeft: false,
-                    onTap: _launchGithub,
+                    onUrlTap: _launchGithub,
+                    onSoundTap: _playSound,
                   ),
                   const SizedBox(height: 40),
                   _ProfileItem(
@@ -48,7 +90,8 @@ class AboutScreen extends StatelessWidget {
                     imagePath: 'assets/images/icons/faris.png',
                     githubUrl: 'https://github.com/MaulanaFarisA',
                     isImageLeft: true,
-                    onTap: _launchGithub,
+                    onUrlTap: _launchGithub,
+                    onSoundTap: _playSound,
                   ),
                 ],
               ),
@@ -60,13 +103,14 @@ class AboutScreen extends StatelessWidget {
   }
 }
 
-class _ProfileItem extends StatefulWidget {
+class _ProfileItem extends StatelessWidget {
   final String name;
   final String roles;
   final String imagePath;
   final String githubUrl;
   final bool isImageLeft;
-  final Function(String) onTap;
+  final Function(String) onUrlTap;
+  final VoidCallback onSoundTap;
 
   const _ProfileItem({
     required this.name,
@@ -74,46 +118,9 @@ class _ProfileItem extends StatefulWidget {
     required this.imagePath,
     required this.githubUrl,
     required this.isImageLeft,
-    required this.onTap,
+    required this.onUrlTap,
+    required this.onSoundTap,
   });
-
-  @override
-  State<_ProfileItem> createState() => _ProfileItemState();
-}
-
-class _ProfileItemState extends State<_ProfileItem> {
-  late AudioPlayer _player;
-
-  @override
-  void initState() {
-    super.initState();
-    _player = AudioPlayer();
-    _initAudio();
-  }
-
-  Future<void> _initAudio() async {
-    try {
-      await _player.setAsset('assets/sounds/mc-hurt.mp3');
-    } catch (e) {
-      debugPrint("Error loading audio: $e");
-    }
-  }
-
-  Future<void> _playSound() async {
-    try {
-      await _player.seek(Duration.zero);
-      await _player.setVolume(5.0);
-      await _player.play();
-    } catch (e) {
-      debugPrint("Error playing audio: $e");
-    }
-  }
-
-  @override
-  void dispose() {
-    _player.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,17 +136,16 @@ class _ProfileItemState extends State<_ProfileItem> {
         child: Stack(
           children: [
             Positioned.fill(
-              child: Image.asset(widget.imagePath, fit: BoxFit.contain),
+              child: Image.asset(imagePath, fit: BoxFit.contain),
             ),
             Positioned.fill(
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onLongPress: () => widget.onTap(widget.githubUrl),
+                  onLongPress: () => onUrlTap(githubUrl),
                   splashColor: Colors.red.withAlpha(128),
-                  onTap: () {
-                    _playSound();
-                  },
+                  enableFeedback: false,
+                  onTap: onSoundTap,
                 ),
               ),
             ),
@@ -152,7 +158,7 @@ class _ProfileItemState extends State<_ProfileItem> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.name,
+          name,
           style: const TextStyle(
             fontSize: 15,
             fontFamily: 'Monocraft',
@@ -161,7 +167,7 @@ class _ProfileItemState extends State<_ProfileItem> {
         ),
         const SizedBox(height: 10),
         Text(
-          widget.roles,
+          roles,
           style: const TextStyle(
             fontSize: 15,
             fontFamily: 'Monocraft',
@@ -174,7 +180,7 @@ class _ProfileItemState extends State<_ProfileItem> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: widget.isImageLeft
+      children: isImageLeft
           ? [imageWidget, textWidget]
           : [textWidget, imageWidget],
     );
