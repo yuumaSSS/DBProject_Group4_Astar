@@ -6,6 +6,9 @@ import 'screens/wrapper.dart';
 import 'screens/stock.dart';
 import 'screens/manage.dart';
 import 'screens/about.dart';
+import 'screens/manage_add.dart';
+import 'screens/manage_update.dart';
+import 'screens/manage_delete.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,7 +35,7 @@ final GoRouter _router = GoRouter(
             var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
             return SlideTransition(position: animation.drive(tween), child: child);
           },
-          transitionDuration: const Duration(milliseconds: 500),
+          transitionDuration: const Duration(milliseconds: 1000),
         );
       },
     ),
@@ -69,7 +72,21 @@ final GoRouter _router = GoRouter(
           routes: [
             GoRoute(
               path: '/manage',
-              builder: (context, state) => const ManageScreen()
+              builder: (context, state) => const ManageScreen(),
+              routes: [
+                GoRoute(
+                  path: 'add',
+                  builder: (context, state) => const ManageAddScreen()
+                ),
+                GoRoute(
+                  path: 'update',
+                  builder: (context, state) => const ManageUpdateScreen()
+                ),
+                GoRoute(
+                  path: 'delete',
+                  builder: (context, state) => const ManageDeleteScreen()
+                ),
+              ]
             ),
           ],
         ),

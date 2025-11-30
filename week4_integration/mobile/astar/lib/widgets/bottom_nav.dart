@@ -21,6 +21,7 @@ class BottomNav extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.all(Radius.zero),
+      enableFeedback: false,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
