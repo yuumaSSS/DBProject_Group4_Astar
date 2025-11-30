@@ -1,12 +1,22 @@
 version: "2"
-cloud:
-    organization: ""
-    project: ""
-    hostname: ""
-servers: []
-sql: []
-overrides:
-    go: null
-plugins: []
-rules: []
-options: {}
+sql:
+  # Admin section
+  - engine: "postgresql"
+    queries: "db/queries/admin/"
+    schema: "migrations/schema.sql"
+    gen:
+      go:
+        package: 'admindb'
+        sql_package: "pgx/v5"
+        out: 'internal/app/admindb'
+        emit_json_tags: true
+  # Public section
+  - engine: "postgresql"
+    queries: "db/queries/public/"
+    schema: "migrations/schema.sql"
+    gen:
+      go:
+        package: 'publicdb'
+        sql_package: "pgx/v5"
+        out: 'internal/app/publicdb'
+        emit_json_tags: true

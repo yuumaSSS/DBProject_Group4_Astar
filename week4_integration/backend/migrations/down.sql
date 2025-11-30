@@ -1,1 +1,0 @@
--- Documentary of what's going on (DROP, DELETE)
