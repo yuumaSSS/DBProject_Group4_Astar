@@ -79,6 +79,7 @@ flutter:
     - assets/images/icons/faris.png
 
     - assets/sounds/anime-chill-music-remix.mp3
+    - assets/sounds/mc-hurt.mp3
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
