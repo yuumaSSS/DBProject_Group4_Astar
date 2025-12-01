@@ -1,7 +1,7 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,10 +9,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 
-	"backend/internal/handler"
+	"backend/pkg/handler"
 )
 
 func main() {
@@ -29,7 +30,7 @@ func main() {
 		dbUrl = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?%s", dbUser, dbPass, dbHost, dbPort, dbName, dbSSL)
 	}
 
-	db, err := sql.Open("pgx", dbUrl)
+	db, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {
 		log.Fatal(err)
 	}

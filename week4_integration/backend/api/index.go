@@ -1,7 +1,7 @@
 package api
 
 import (
-	"database/sql"
+	"context"
 	"encoding/base64"
 	"log"
 	"net/http"
@@ -9,17 +9,18 @@ import (
 	"sync"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"backend/internal/handler"
+	"backend/pkg/handler"
 )
 
 var (
-	db   *sql.DB
+	db   *pgxpool.Pool
 	once sync.Once
 )
 
-func InitDB() *sql.DB {
+func InitDB() *pgxpool.Pool {
 	once.Do(func() {
 		certContent := os.Getenv("DB_ROOT_CERT_CONTENT")
 		if certContent != "" {
@@ -29,7 +30,7 @@ func InitDB() *sql.DB {
 
 		dbUrl := os.Getenv("DATABASE_URL")
 		var err error
-		db, err = sql.Open("pgx", dbUrl)
+		db, err = pgxpool.New(context.Background(), dbUrl)
 		if err != nil {
 			log.Printf("DB Connection Error: %v", err)
 		}
