@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"encoding/base64"
 	"log"
 	"net/http"
 	"os"
@@ -22,12 +21,6 @@ var (
 
 func InitDB() *pgxpool.Pool {
 	once.Do(func() {
-		certContent := os.Getenv("DB_ROOT_CERT_CONTENT")
-		if certContent != "" {
-			decoded, _ := base64.StdEncoding.DecodeString(certContent)
-			_ = os.WriteFile("/tmp/prod-ca-2021.crt", decoded, 0644)
-		}
-
 		dbUrl := os.Getenv("DATABASE_URL")
 		var err error
 		db, err = pgxpool.New(context.Background(), dbUrl)
@@ -56,14 +49,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	router.Get("/api/products/{id}", h.HandleGetProductDetail)
 
 	// Admin (Mobile)
-	router.Route("/api/admin", func(r chi.Router) {
-		r.Get("/products", h.HandleAdminListProducts)
-		r.Post("/products", h.HandleCreateProduct)
-		r.Put("/products/{id}", h.HandleUpdateProduct)
-		r.Delete("/products/{id}", h.HandleDeleteProduct)
+	router.Route("/api/admin", func(ar chi.Router) {
+		router.Get("/products", h.HandleAdminListProducts)
+		router.Post("/products", h.HandleCreateProduct)
+		router.Put("/products/{id}", h.HandleUpdateProduct)
+		router.Delete("/products/{id}", h.HandleDeleteProduct)
 		
-		r.Get("/orders/pending", h.HandleListPendingOrders)
-		r.Post("/orders/{id}/status", h.HandleUpdateOrderStatus)
+		router.Get("/orders/pending", h.HandleListPendingOrders)
+		router.Post("/orders/{id}/status", h.HandleUpdateOrderStatus)
 	})
 
 	router.ServeHTTP(w, r)
