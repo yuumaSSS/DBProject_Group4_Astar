@@ -1,5 +1,9 @@
+"use client"
+
 import Image from "next/image";
 import Container from "./container";
+import PopUp from "./pop-up";
+import { useState } from "react";
 
 const dummyProducts = [
   {
@@ -69,6 +73,8 @@ const dummyProducts = [
 ];
 
 const Collections = () => {
+  const [selectedProduct, setSelectedProduct] = useState<typeof dummyProducts[0] | null>(null);
+
   return (
     <section className="py-12 md:py-16">
       <Container>
@@ -79,6 +85,7 @@ const Collections = () => {
           {dummyProducts.map((product) => (
             <div
               key={product.productId}
+              onClick={() => setSelectedProduct(product)}
               className="flex flex-col gap-2 p-3 md:p-4 hover:shadow-lg transition-shadow rounded-lg cursor-pointer"
             >
               <div className="relative aspect-5/7 w-full overflow-hidden rounded-lg bg-gray-100">
@@ -90,7 +97,7 @@ const Collections = () => {
                 />
               </div>
               <div className="">
-                <h3 className="font-semibold text-sm md:text-base line-clamp-1">
+                <h3 className="font-semibold text-sm md:text-base">
                   {product.productName}
                 </h3>
                 <div className="text-xs md:text-sm text-white my-1">
@@ -104,6 +111,10 @@ const Collections = () => {
           ))}
         </div>
       </Container>
+
+      {selectedProduct && (
+        <PopUp product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+      )}
     </section>
   );
 };
