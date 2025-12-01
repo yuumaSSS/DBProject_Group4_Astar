@@ -13,8 +13,14 @@ const HeroSection = () => {
         priority
       />
       <div className="absolute inset-0 flex items-end justify-center pb-12">
-        <button className="bg-white text-black px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-          Shop Now
+        <button className="hover:scale-110 transition-transform border-0 bg-transparent p-0 cursor-pointer">
+          <Image
+            src="/shop_button.webp"
+            alt="Shop Now"
+            width={400}
+            height={120}
+            className="w-70"
+          />
         </button>
       </div>
     </div>
