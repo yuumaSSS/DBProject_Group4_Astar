@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -20,15 +19,6 @@ func main() {
 	_ = godotenv.Load("base.env")
 
 	dbUrl := os.Getenv("DATABASE_URL")
-	if dbUrl == "" {
-		dbUser := os.Getenv("DB_USER")
-		dbPass := os.Getenv("DB_PASS")
-		dbHost := os.Getenv("DB_HOST")
-		dbPort := os.Getenv("DB_PORT")
-		dbName := os.Getenv("DB_NAME")
-		dbSSL  := os.Getenv("DB_SSL")
-		dbUrl = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?%s", dbUser, dbPass, dbHost, dbPort, dbName, dbSSL)
-	}
 
 	db, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {
