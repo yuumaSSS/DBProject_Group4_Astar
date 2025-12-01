@@ -11,7 +11,7 @@ const dummyProducts = [
     productName: "Tufy Hoodie",
     productPrice: 350000,
     productImage: "/tufy_hoodie.webp",
-    productStock: 25,
+    productStock: 2,
     productCategory: "Hoodie",
   },
   {
@@ -67,13 +67,19 @@ const dummyProducts = [
     productName: "Denim Jacket",
     productPrice: 550000,
     productImage: "/tufy_hoodie.webp",
-    productStock: 12,
+    productStock: 0,
     productCategory: "Jacket",
   },
 ];
 
 const Collections = () => {
   const [selectedProduct, setSelectedProduct] = useState<typeof dummyProducts[0] | null>(null);
+
+  const sortedProducts = [...dummyProducts].sort((a, b) => {
+    if (a.productStock === 0 && b.productStock > 0) return 1;
+    if (a.productStock > 0 && b.productStock === 0) return -1;
+    return 0;
+  });
 
   return (
     <section className="py-12 md:py-16">
@@ -82,11 +88,11 @@ const Collections = () => {
           A*Star Collection
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {dummyProducts.map((product) => (
+          {sortedProducts.map((product) => (
             <div
               key={product.productId}
-              onClick={() => setSelectedProduct(product)}
-              className="flex flex-col gap-2 p-3 md:p-4 hover:shadow-lg transition-shadow rounded-lg cursor-pointer"
+              onClick={() => product.productStock > 0 && setSelectedProduct(product)}
+              className={`flex flex-col gap-2 p-3 md:p-4 hover:shadow-lg transition-shadow rounded-lg relative ${product.productStock > 0 ? 'cursor-pointer' : 'cursor-not-allowed'}`}
             >
               <div className="relative aspect-5/7 w-full overflow-hidden rounded-lg bg-gray-100">
                 <Image
@@ -95,6 +101,11 @@ const Collections = () => {
                   fill
                   className="object-cover"
                 />
+                {product.productStock === 0 && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <p className="text-white font-bold text-lg md:text-xl">OUT OF STOCK</p>
+                  </div>
+                )}
               </div>
               <div className="">
                 <h3 className="font-semibold text-sm md:text-base">
