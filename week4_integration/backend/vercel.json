@@ -1,7 +1,4 @@
 {
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" }
-  ],
   "builds":[
     {
         "src": "cmd/main.go",
