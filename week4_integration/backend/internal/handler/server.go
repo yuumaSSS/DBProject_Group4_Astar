@@ -1,247 +1,221 @@
 package handler
 
 import (
-	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"backend/internal/app/admindb"
 	"backend/internal/app/publicdb"
-	"backend/pb"
-
-	"github.com/jackc/pgx/v5/pgtype"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-type astar struct {
-	pb.UnimplementedStorefrontServiceServer
-	pb.UnimplementedAdminServiceServer
-
+type HttpServer struct {
 	DB      *sql.DB
 	PublicQ *publicdb.Queries
 	AdminQ  *admindb.Queries
 }
 
-func Newastar(db *sql.DB) *astar {
-	return &astar{
+func NewHttpServer(db *sql.DB) *HttpServer {
+	return &HttpServer{
 		DB:      db,
 		PublicQ: publicdb.New(db),
 		AdminQ:  admindb.New(db),
 	}
 }
 
-// Web
-
-func (s *astar) ListAvailableProducts(ctx context.Context, _ *pb.Empty) (*pb.ProductListResponse, error) {
-	products, err := s.PublicQ.ListAvailableProducts(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Gagal mengambil data produk: %v", err)
-	}
-
-	var pbProducts []*pb.Product
-	for _, p := range products {
-		price, _ := p.UnitPrice.Float64Value()
-
-		pbProducts = append(pbProducts, &pb.Product{
-			Id:       p.ProductID,
-			Name:     p.ProductName,
-			Category: p.Category,
-			Price:    price.Float64,
-			ImageUrl: p.ImageUrl,
-			Stock:    p.Stock,
-		})
-	}
-
-	return &pb.ProductListResponse{Products: pbProducts}, nil
+func writeJSON(w http.ResponseWriter, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
 }
 
-func (s *astar) GetProductDetail(ctx context.Context, req *pb.ProductIDRequest) (*pb.ProductDetailResponse, error) {
-	p, err := s.PublicQ.GetProductDetail(ctx, req.Id)
+// Web
+
+func (h *HttpServer) HandleListPublicProducts(w http.ResponseWriter, r *http.Request) {
+	products, err := h.PublicQ.ListAvailableProducts(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	writeJSON(w, products)
+}
+
+func (h *HttpServer) HandleGetProductDetail(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, _ := strconv.Atoi(idStr)
+
+	product, err := h.PublicQ.GetProductDetail(r.Context(), int32(id))
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, status.Error(codes.NotFound, "Produk tidak ditemukan")
+			http.Error(w, "Product not found", 404)
+		} else {
+			http.Error(w, err.Error(), 500)
 		}
-		return nil, status.Errorf(codes.Internal, "DB Error: %v", err)
+		return
 	}
-
-	price, _ := p.UnitPrice.Float64Value()
-
-	return &pb.ProductDetailResponse{
-		Product: &pb.Product{
-			Id:          p.ProductID,
-			Name:        p.ProductName,
-			Category:    p.Category,
-			Description: p.Description,
-			Price:       price.Float64,
-			ImageUrl:    p.ImageUrl,
-			Stock:       p.Stock,
-		},
-	}, nil
+	writeJSON(w, product)
 }
 
 // Mobile
 
-func (s *astar) ListAllProducts(ctx context.Context, _ *pb.Empty) (*pb.ProductListResponse, error) {
-	products, err := s.AdminQ.ListAllProductsAdmin(ctx)
+func (h *HttpServer) HandleAdminListProducts(w http.ResponseWriter, r *http.Request) {
+	products, err := h.AdminQ.ListAllProductsAdmin(r.Context())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Gagal fetch products: %v", err)
+		http.Error(w, err.Error(), 500)
+		return
 	}
-
-	var pbProducts []*pb.Product
-	for _, p := range products {
-		price, _ := p.UnitPrice.Float64Value()
-		pbProducts = append(pbProducts, &pb.Product{
-			Id:       p.ProductID,
-			Name:     p.ProductName,
-			Category: p.Category,
-			Price:    price.Float64,
-			ImageUrl: p.ImageUrl,
-			Stock:    p.Stock,
-		})
-	}
-	return &pb.ProductListResponse{Products: pbProducts}, nil
+	writeJSON(w, products)
 }
 
-func (s *astar) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.CreateProductResponse, error) {
-	var priceNumeric pgtype.Numeric
-	priceNumeric.Scan(fmt.Sprintf("%f", req.Price))
+func (h *HttpServer) HandleCreateProduct(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Name        string  `json:"name"`
+		Category    string  `json:"category"`
+		Description string  `json:"description"`
+		Price       float64 `json:"price"`
+		ImageUrl    string  `json:"image_url"`
+		Stock       int32   `json:"stock"`
+	}
 
-	arg := admindb.CreateProductParams{
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", 400)
+		return
+	}
+
+	var priceNum pgtype.Numeric
+	priceNum.Scan(fmt.Sprintf("%f", req.Price))
+
+	id, err := h.AdminQ.CreateProduct(r.Context(), admindb.CreateProductParams{
 		ProductName: req.Name,
 		Category:    req.Category,
 		Description: req.Description,
-		UnitPrice:   priceNumeric,
+		UnitPrice:   priceNum,
 		ImageUrl:    req.ImageUrl,
 		Stock:       req.Stock,
-	}
+	})
 
-	id, err := s.AdminQ.CreateProduct(ctx, arg)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Gagal create product: %v", err)
+		http.Error(w, "Gagal create product: "+err.Error(), 500)
+		return
 	}
 
-	return &pb.CreateProductResponse{Id: id}, nil
+	writeJSON(w, map[string]int32{"product_id": id})
 }
 
-func (s *astar) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.Empty, error) {
-	var priceNumeric pgtype.Numeric
-	priceNumeric.Scan(fmt.Sprintf("%f", req.Price))
+func (h *HttpServer) HandleUpdateProduct(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, _ := strconv.Atoi(idStr)
 
-	arg := admindb.UpdateProductParams{
-		ProductID:   req.Id,
+	var req struct {
+		Name        string  `json:"name"`
+		Category    string  `json:"category"`
+		Description string  `json:"description"`
+		Price       float64 `json:"price"`
+		ImageUrl    string  `json:"image_url"`
+		Stock       int32   `json:"stock"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", 400)
+		return
+	}
+
+	var priceNum pgtype.Numeric
+	priceNum.Scan(fmt.Sprintf("%f", req.Price))
+
+	err := h.AdminQ.UpdateProduct(r.Context(), admindb.UpdateProductParams{
+		ProductID:   int32(id),
 		ProductName: req.Name,
 		Category:    req.Category,
 		Description: req.Description,
-		UnitPrice:   priceNumeric,
+		UnitPrice:   priceNum,
 		ImageUrl:    req.ImageUrl,
 		Stock:       req.Stock,
-	}
+	})
 
-	err := s.AdminQ.UpdateProduct(ctx, arg)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Gagal update product: %v", err)
+		http.Error(w, "Gagal update: "+err.Error(), 500)
+		return
 	}
-
-	return &pb.Empty{}, nil
+	writeJSON(w, map[string]string{"status": "success"})
 }
 
-func (s *astar) DeleteProduct(ctx context.Context, req *pb.ProductIDRequest) (*pb.Empty, error) {
-	err := s.AdminQ.DeleteProduct(ctx, req.Id)
+func (h *HttpServer) HandleDeleteProduct(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, _ := strconv.Atoi(idStr)
+
+	err := h.AdminQ.DeleteProduct(r.Context(), int32(id))
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Gagal delete product: %v", err)
+		http.Error(w, "Gagal delete: "+err.Error(), 500)
+		return
 	}
-	return &pb.Empty{}, nil
+	writeJSON(w, map[string]string{"status": "deleted"})
 }
 
-// Order management
-
-func (s *astar) ListPendingOrders(ctx context.Context, _ *pb.Empty) (*pb.OrderListResponse, error) {
-	orders, err := s.AdminQ.ListPendingOrders(ctx)
+func (h *HttpServer) HandleListPendingOrders(w http.ResponseWriter, r *http.Request) {
+	orders, err := h.AdminQ.ListPendingOrders(r.Context())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Gagal fetch orders: %v", err)
+		http.Error(w, err.Error(), 500)
+		return
 	}
-
-	var pbOrders []*pb.Order
-	for _, o := range orders {
-		total, _ := o.TotalAmount.Float64Value()
-
-		custName := "Unknown"
-		if o.CustomerName.Valid {
-			custName = o.CustomerName.String
-		}
-
-		phone := "-"
-		if o.PhoneNumber.Valid {
-			phone = o.PhoneNumber.String
-		}
-
-		prodName := "Produk Terhapus"
-		if o.ProductName.Valid {
-			prodName = o.ProductName.String
-		}
-
-		imgUrl := ""
-		if o.ImageUrl.Valid {
-			imgUrl = o.ImageUrl.String
-		}
-
-		dateStr := ""
-		if o.OrderDate.Valid {
-			dateStr = o.OrderDate.Time.Format("2006-01-02 15:04")
-		}
-
-		pbOrders = append(pbOrders, &pb.Order{
-			OrderId:      o.OrderID,
-			CustomerName: custName,
-			PhoneNumber:  phone,
-			ProductName:  prodName,
-			ImageUrl:     imgUrl,
-			TotalAmount:  total.Float64,
-			Quantity:     o.Quantity,
-			Status:       o.Status,
-			OrderDate:    dateStr,
-		})
-	}
-
-	return &pb.OrderListResponse{Orders: pbOrders}, nil
+	writeJSON(w, orders)
 }
 
-func (s *astar) UpdateOrderStatus(ctx context.Context, req *pb.UpdateStatusRequest) (*pb.Empty, error) {
-	tx, err := s.DB.Begin()
+func (h *HttpServer) HandleUpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	orderID, _ := strconv.Atoi(idStr)
+
+	var req struct {
+		Status string `json:"status"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", 400)
+		return
+	}
+
+	tx, err := h.DB.Begin()
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Gagal memulai transaksi DB")
+		http.Error(w, "Tx Error", 500)
+		return
 	}
 	defer tx.Rollback()
 
-	qtx := s.AdminQ.WithTx(tx)
+	qtx := h.AdminQ.WithTx(tx)
 
-	err = qtx.UpdateOrderStatus(ctx, admindb.UpdateOrderStatusParams{
-		OrderID: req.OrderId,
+	err = qtx.UpdateOrderStatus(r.Context(), admindb.UpdateOrderStatusParams{
+		OrderID: int32(orderID),
 		Status:  req.Status,
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Gagal update status: %v", err)
+		http.Error(w, "Gagal update status: "+err.Error(), 500)
+		return
 	}
 
 	if req.Status == "paid" {
-		orderInfo, err := qtx.GetOrderQuantityAndProduct(ctx, req.OrderId)
+		orderInfo, err := qtx.GetOrderQuantityAndProduct(r.Context(), int32(orderID))
 		if err != nil {
-			return nil, status.Errorf(codes.NotFound, "Order info tidak ditemukan: %v", err)
+			http.Error(w, "Order info not found", 404)
+			return
 		}
 
-		err = qtx.DecreaseProductStock(ctx, admindb.DecreaseProductStockParams{
+		err = qtx.DecreaseProductStock(r.Context(), admindb.DecreaseProductStockParams{
 			ProductID: orderInfo.ProductID,
 			Stock:     orderInfo.Quantity,
 		})
 		if err != nil {
-			return nil, status.Errorf(codes.Aborted, "Gagal mengurangi stok (Mungkin stok habis): %v", err)
+			http.Error(w, "Gagal kurangi stok", 400)
+			return
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, status.Error(codes.Internal, "Gagal commit transaksi")
+		http.Error(w, "Commit Failed", 500)
+		return
 	}
 
-	return &pb.Empty{}, nil
+	writeJSON(w, map[string]string{"status": "updated"})
 }
