@@ -11,6 +11,42 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const decreaseProductStock = `-- name: DecreaseProductStock :exec
+UPDATE products 
+SET stock = stock - $2 
+WHERE product_id = $1
+`
+
+type DecreaseProductStockParams struct {
+	ProductID int32 `json:"product_id"`
+	Stock     int32 `json:"stock"`
+}
+
+// PENTING: Dipakai Go saat status berubah jadi 'paid'
+func (q *Queries) DecreaseProductStock(ctx context.Context, arg DecreaseProductStockParams) error {
+	_, err := q.db.Exec(ctx, decreaseProductStock, arg.ProductID, arg.Stock)
+	return err
+}
+
+const getOrderQuantityAndProduct = `-- name: GetOrderQuantityAndProduct :one
+SELECT product_id, quantity 
+FROM orders 
+WHERE order_id = $1
+`
+
+type GetOrderQuantityAndProductRow struct {
+	ProductID int32 `json:"product_id"`
+	Quantity  int32 `json:"quantity"`
+}
+
+// PENTING: Dipakai Go untuk mengetahui jumlah stok yang harus dikurangi
+func (q *Queries) GetOrderQuantityAndProduct(ctx context.Context, orderID int32) (GetOrderQuantityAndProductRow, error) {
+	row := q.db.QueryRow(ctx, getOrderQuantityAndProduct, orderID)
+	var i GetOrderQuantityAndProductRow
+	err := row.Scan(&i.ProductID, &i.Quantity)
+	return i, err
+}
+
 const listPendingOrders = `-- name: ListPendingOrders :many
 SELECT 
     o.order_id,
@@ -18,10 +54,8 @@ SELECT
     o.total_amount,
     o.quantity,
     o.status,
-    -- Ambil info User biar admin tau siapa yang beli
     u.full_name AS customer_name,
     u.phone_number,
-    -- Ambil info Product biar admin tau barang apa
     p.product_name,
     p.image_url
 FROM orders o
@@ -43,7 +77,6 @@ type ListPendingOrdersRow struct {
 	ImageUrl     string           `json:"image_url"`
 }
 
-// Requirement: Mobile app fetching data order yang pending
 func (q *Queries) ListPendingOrders(ctx context.Context) ([]ListPendingOrdersRow, error) {
 	rows, err := q.db.Query(ctx, listPendingOrders)
 	if err != nil {
@@ -85,7 +118,6 @@ type UpdateOrderStatusParams struct {
 	Status  string `json:"status"`
 }
 
-// Requirement: Mobile app mengubah data pending menjadi paid atau cancelled
 func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) error {
 	_, err := q.db.Exec(ctx, updateOrderStatus, arg.OrderID, arg.Status)
 	return err

@@ -8,19 +8,20 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"backend/internal/app/admindb"
-	"backend/internal/app/publicdb"
+	"backend/pkg/app/admindb"
+	"backend/pkg/app/publicdb"
 )
 
 type HttpServer struct {
-	DB      *sql.DB
+	DB      *pgxpool.Pool
 	PublicQ *publicdb.Queries
 	AdminQ  *admindb.Queries
 }
 
-func NewHttpServer(db *sql.DB) *HttpServer {
+func NewHttpServer(db *pgxpool.Pool) *HttpServer {
 	return &HttpServer{
 		DB:      db,
 		PublicQ: publicdb.New(db),
@@ -177,12 +178,12 @@ func (h *HttpServer) HandleUpdateOrderStatus(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	tx, err := h.DB.Begin()
+	tx, err := h.DB.Begin(r.Context())
 	if err != nil {
 		http.Error(w, "Tx Error", 500)
 		return
 	}
-	defer tx.Rollback()
+	defer tx.Rollback(r.Context())
 
 	qtx := h.AdminQ.WithTx(tx)
 
@@ -212,7 +213,7 @@ func (h *HttpServer) HandleUpdateOrderStatus(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	if err := tx.Commit(); err != nil {
+	if err := tx.Commit(r.Context()); err != nil {
 		http.Error(w, "Commit Failed", 500)
 		return
 	}
