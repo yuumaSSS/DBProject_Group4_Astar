@@ -1,8 +1,8 @@
-import React from 'react'
+import Container from './container'
 
 const Navbar = () => {
   return (
-    <div>Navbar</div>
+    <Container className='bg-red-400'>Navbar</Container>
   )
 }
 
