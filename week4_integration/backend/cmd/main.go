@@ -32,7 +32,7 @@ func main() {
 
 	db, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 	}
 	defer db.Close()
 
