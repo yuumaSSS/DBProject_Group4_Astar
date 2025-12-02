@@ -17,7 +17,6 @@ class MainWrapper extends StatefulWidget {
 }
 
 class _MainWrapperState extends State<MainWrapper> {
-
   @override
   void initState() {
     super.initState();
@@ -44,13 +43,10 @@ class _MainWrapperState extends State<MainWrapper> {
           transitionBuilder: (Widget child, Animation<double> animation) {
             return SlideTransition(
               position: Tween<Offset>(
-                begin: const Offset(0.0, 0.1), 
+                begin: const Offset(0.0, 0.1),
                 end: Offset.zero,
               ).animate(animation),
-              child: FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
+              child: FadeTransition(opacity: animation, child: child),
             );
           },
           child: KeyedSubtree(

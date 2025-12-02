@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
+import '../services/api_service.dart';
+import '../models/products.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -14,18 +16,24 @@ class _LoadingScreenState extends State<LoadingScreen> {
   double _progressValue = 0.0;
   String _statusText = "Loading data...";
   late AudioPlayer player;
+  
+  final ApiService _apiService = ApiService();
+  late Future<List<Product>> _preloadedData;
 
   @override
   void initState() {
     super.initState();
     player = AudioPlayer();
     _initAudio(); 
+    
+    _preloadedData = _apiService.fetchProducts();
+    
     _startFakeJob();
   }
 
   Future<void> _initAudio() async {
     try {
-      await player.setAsset('assets/sounds/anime-chill-music-remix.mp3');
+      await player.setAsset('assets/sounds/asian-gong-music.mp3');
       await player.setVolume(5.0); 
       player.play();
     } catch (e) {
@@ -34,16 +42,13 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 
   void _startFakeJob() {
-    const oneSec = Duration(milliseconds: 10);
+    const oneSec = Duration(milliseconds: 400);
     Timer.periodic(oneSec, (Timer timer) async {
       if (mounted) {
         setState(() {
           if (_progressValue >= 1.0) {
             timer.cancel();
-            _statusText = "Done!";
-            
-            player.stop();
-            context.go('/stock');
+            _handleNavigation();
           } else {
             _progressValue += 0.05; 
 
@@ -53,6 +58,22 @@ class _LoadingScreenState extends State<LoadingScreen> {
         });
       }
     });
+  }
+
+  Future<void> _handleNavigation() async {
+    _statusText = "Done!";
+    player.stop();
+
+    try {
+      final products = await _preloadedData;
+      if (mounted) {
+        context.go('/stock', extra: products);
+      }
+    } catch (e) {
+      if (mounted) {
+        context.go('/stock');
+      }
+    }
   }
 
   @override

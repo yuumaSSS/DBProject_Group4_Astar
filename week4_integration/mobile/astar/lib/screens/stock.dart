@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../models/products.dart';
@@ -11,14 +12,27 @@ class StockScreen extends StatefulWidget {
   State<StockScreen> createState() => _StockScreenState();
 }
 
-class _StockScreenState extends State<StockScreen> {
+class _StockScreenState extends State<StockScreen> with AutomaticKeepAliveClientMixin {
   final ApiService _apiService = ApiService();
   late Future<List<Product>> _productsFuture;
+  bool _isInit = true;
 
   @override
-  void initState() {
-    super.initState();
-    _loadData();
+  bool get wantKeepAlive => true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isInit) {
+      final extra = GoRouterState.of(context).extra;
+      
+      if (extra != null && extra is List<Product>) {
+        _productsFuture = Future.value(extra);
+      } else {
+        _loadData();
+      }
+      _isInit = false;
+    }
   }
 
   void _loadData() {
@@ -37,9 +51,13 @@ class _StockScreenState extends State<StockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: RefreshIndicator(
+        color: const Color(0xFF5B6EE1),
+        backgroundColor: Colors.white,
         onRefresh: () async {
           _loadData();
           await _productsFuture;
@@ -49,38 +67,38 @@ class _StockScreenState extends State<StockScreen> {
             const Header(title: 'Stock'),
             Expanded(
               child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 2. Konten Produk (FutureBuilder)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: FutureBuilder<List<Product>>(
                         future: _productsFuture,
                         builder: (context, snapshot) {
-                          // State: Loading
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
                             return const Center(
                               child: Padding(
                                 padding: EdgeInsets.all(50.0),
-                                child: CircularProgressIndicator(
-                                  color: Color(0xFF455CE7),
+                                child: Text(
+                                  'Fetching data...',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Color(0xFF5B6EE1),
+                                    fontSize: 20,
+                                    fontFamily: 'Monocraft',
+                                    fontWeight: FontWeight.w600
+                                  ),
                                 ),
                               ),
                             );
                           }
 
-                          // State: Error
                           if (snapshot.hasError) {
                             return Center(
                               child: Column(
                                 children: [
-                                  const Icon(
-                                    Icons.error_outline,
-                                    color: Colors.red,
-                                    size: 40,
-                                  ),
+                                  const Icon(Icons.error_outline, color: Colors.red, size: 40),
                                   const SizedBox(height: 10),
                                   Text("Error: ${snapshot.error}"),
                                   const SizedBox(height: 10),
@@ -93,7 +111,6 @@ class _StockScreenState extends State<StockScreen> {
                             );
                           }
 
-                          // State: Kosong
                           if (!snapshot.hasData || snapshot.data!.isEmpty) {
                             return const Center(
                               child: Padding(
@@ -103,21 +120,18 @@ class _StockScreenState extends State<StockScreen> {
                             );
                           }
 
-                          // State: Ada Data
                           final products = snapshot.data!;
+                          products.sort((a, b) => a.id.compareTo(b.id));
 
                           return GridView.builder(
-                            // Agar GridView bisa discroll menyatu dengan SingleChildScrollView
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 0.5,
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
-                                ),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.5,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
                             itemCount: products.length,
                             itemBuilder: (context, index) {
                               final product = products[index];
@@ -138,11 +152,10 @@ class _StockScreenState extends State<StockScreen> {
     );
   }
 
-  // Widget Kartu Stok
   Widget _buildStockCard(Product product) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFEEF2F6),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -155,16 +168,12 @@ class _StockScreenState extends State<StockScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Gambar Produk
           Expanded(
             flex: 3,
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               child: Stack(
                 children: [
-                  // Gambar Utama
                   Image.network(
                     product.imageUrl,
                     width: double.infinity,
@@ -175,21 +184,17 @@ class _StockScreenState extends State<StockScreen> {
                       child: const Icon(Icons.image_not_supported),
                     ),
                   ),
-                  // Badge Stok di pojok gambar
                   Positioned(
                     top: 8,
                     right: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: product.stock > 0 ? Colors.green : Colors.red,
+                        color: product.stock > 0 ? Colors.transparent : Colors.red,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        product.stock > 0 ? 'Ready' : 'Out of Stock',
+                        product.stock > 0 ? '' : 'Out of Stock',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -202,8 +207,6 @@ class _StockScreenState extends State<StockScreen> {
               ),
             ),
           ),
-
-          // Info Produk
           Expanded(
             flex: 2,
             child: Padding(
@@ -217,7 +220,7 @@ class _StockScreenState extends State<StockScreen> {
                     children: [
                       Text(
                         product.name,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
@@ -236,7 +239,7 @@ class _StockScreenState extends State<StockScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'id: ${product.id.toString()}',
+                        'id: ${product.id}',
                         style: TextStyle(
                           color: Colors.grey[500],
                           fontSize: 11,
@@ -245,8 +248,6 @@ class _StockScreenState extends State<StockScreen> {
                       ),
                     ],
                   ),
-
-                  // Harga dan Jumlah Stok Besar
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -260,10 +261,7 @@ class _StockScreenState extends State<StockScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.grey[100],
                           borderRadius: BorderRadius.circular(4),
@@ -275,9 +273,7 @@ class _StockScreenState extends State<StockScreen> {
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             fontFamily: 'Monocraft',
-                            color: product.stock <= 5
-                                ? Colors.red
-                                : Colors.black87,
+                            color: product.stock <= 5 ? Colors.red : Colors.black87,
                           ),
                         ),
                       ),

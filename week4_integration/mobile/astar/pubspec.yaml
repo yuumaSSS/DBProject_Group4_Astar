@@ -41,6 +41,7 @@ dependencies:
   supabase_flutter: ^2.10.3
   http: ^1.6.0
   intl: ^0.20.2
+  flutter_dotenv: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +71,8 @@ flutter:
   #   - images/a_dot_ham.jpeg
 
   assets:
+    - .env
+      
     - assets/images/icons/logo_login.png
     - assets/images/icons/stock.png
     - assets/images/icons/stock_c.png
@@ -81,7 +84,7 @@ flutter:
     - assets/images/icons/dhimas.png
     - assets/images/icons/faris.png
 
-    - assets/sounds/anime-chill-music-remix.mp3
+    - assets/sounds/asian-gong-music.mp3
     - assets/sounds/mc-hurt.mp3
 
   # An image asset can refer to one or more resolution-specific "variants", see
