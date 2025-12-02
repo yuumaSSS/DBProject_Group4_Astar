@@ -50,6 +50,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	// Admin (Mobile)
 	router.Route("/api/admin", func(ar chi.Router) {
+		ar.Use(h.AdminOnly)
+
 		ar.Get("/products", h.HandleAdminListProducts)
 		ar.Post("/products", h.HandleCreateProduct)
 		ar.Put("/products/{id}", h.HandleUpdateProduct)
