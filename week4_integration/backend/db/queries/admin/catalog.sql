@@ -8,7 +8,7 @@ SELECT
     unit_price, 
     stock
 FROM products
-ORDER BY product_id DESC;
+ORDER BY product_id ASC;
 
 -- name: CreateProduct :one
 -- Requirement: Mobile app menambah product

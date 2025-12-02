@@ -69,7 +69,7 @@ SELECT
     unit_price, 
     stock
 FROM products
-ORDER BY product_id DESC
+ORDER BY product_id ASC
 `
 
 type ListAllProductsAdminRow struct {
