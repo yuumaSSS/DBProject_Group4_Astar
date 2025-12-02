@@ -50,13 +50,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	// Admin (Mobile)
 	router.Route("/api/admin", func(ar chi.Router) {
-		router.Get("/products", h.HandleAdminListProducts)
-		router.Post("/products", h.HandleCreateProduct)
-		router.Put("/products/{id}", h.HandleUpdateProduct)
-		router.Delete("/products/{id}", h.HandleDeleteProduct)
+		ar.Get("/products", h.HandleAdminListProducts)
+		ar.Post("/products", h.HandleCreateProduct)
+		ar.Put("/products/{id}", h.HandleUpdateProduct)
+		ar.Delete("/products/{id}", h.HandleDeleteProduct)
 		
-		router.Get("/orders/pending", h.HandleListPendingOrders)
-		router.Post("/orders/{id}/status", h.HandleUpdateOrderStatus)
+		ar.Get("/orders/pending", h.HandleListPendingOrders)
+		ar.Post("/orders/{id}/status", h.HandleUpdateOrderStatus)
 	})
 
 	router.ServeHTTP(w, r)
