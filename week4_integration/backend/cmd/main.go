@@ -1,37 +1,28 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
+	"context"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 
-	"backend/internal/handler"
+	"backend/pkg/handler"
 )
 
 func main() {
 	_ = godotenv.Load("base.env")
 
 	dbUrl := os.Getenv("DATABASE_URL")
-	if dbUrl == "" {
-		dbUser := os.Getenv("DB_USER")
-		dbPass := os.Getenv("DB_PASS")
-		dbHost := os.Getenv("DB_HOST")
-		dbPort := os.Getenv("DB_PORT")
-		dbName := os.Getenv("DB_NAME")
-		dbSSL  := os.Getenv("DB_SSL")
-		dbUrl = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?%s", dbUser, dbPass, dbHost, dbPort, dbName, dbSSL)
-	}
 
-	db, err := sql.Open("pgx", dbUrl)
+	db, err := pgxpool.New(context.Background(), dbUrl)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 	}
 	defer db.Close()
 

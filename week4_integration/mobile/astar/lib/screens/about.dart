@@ -93,6 +93,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     onUrlTap: _launchGithub,
                     onSoundTap: _playSound,
                   ),
+                  const SizedBox(height: 40)
                 ],
               ),
             ),

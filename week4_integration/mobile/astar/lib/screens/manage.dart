@@ -13,31 +13,35 @@ class ManageScreen extends StatelessWidget {
 
         Expanded(
           child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _MenuButton(
-                  label: 'ADD',
-                  color: const Color(0xFF008000),
-                  onTap: () => context.go('/manage/add'),
-                ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _MenuButton(
+                    label: 'ADD',
+                    color: const Color(0xFF008000),
+                    onTap: () => context.go('/manage/add'),
+                  ),
                 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
                 
-                _MenuButton(
-                  label: 'UPDATE',
-                  color: const Color(0xFF5B6EE1),
-                  onTap: () => context.go('/manage/update'),
-                ),
+                  _MenuButton(
+                    label: 'UPDATE',
+                    color: const Color(0xFF5B6EE1),
+                    onTap: () => context.go('/manage/update'),
+                  ),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                _MenuButton(
-                  label: 'DELETE',
-                  color: const Color(0xFFFF0004),
-                  onTap: () => context.go('/manage/delete'),
-                ),
-              ],
+                  _MenuButton(
+                    label: 'DELETE',
+                    color: const Color(0xFFFF0004),
+                    onTap: () => context.go('/manage/delete'),
+                  ),
+
+                  const SizedBox(height: 40)
+                ],
+              ),
             ),
           ),
         ),

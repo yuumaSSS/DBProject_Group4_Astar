@@ -1,35 +1,29 @@
 package api
 
 import (
-	"database/sql"
-	"encoding/base64"
+	"context"
 	"log"
 	"net/http"
 	"os"
 	"sync"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"backend/internal/handler"
+	"backend/pkg/handler"
 )
 
 var (
-	db   *sql.DB
+	db   *pgxpool.Pool
 	once sync.Once
 )
 
-func InitDB() *sql.DB {
+func InitDB() *pgxpool.Pool {
 	once.Do(func() {
-		certContent := os.Getenv("DB_ROOT_CERT_CONTENT")
-		if certContent != "" {
-			decoded, _ := base64.StdEncoding.DecodeString(certContent)
-			_ = os.WriteFile("/tmp/prod-ca-2021.crt", decoded, 0644)
-		}
-
 		dbUrl := os.Getenv("DATABASE_URL")
 		var err error
-		db, err = sql.Open("pgx", dbUrl)
+		db, err = pgxpool.New(context.Background(), dbUrl)
 		if err != nil {
 			log.Printf("DB Connection Error: %v", err)
 		}
@@ -55,14 +49,16 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	router.Get("/api/products/{id}", h.HandleGetProductDetail)
 
 	// Admin (Mobile)
-	router.Route("/api/admin", func(r chi.Router) {
-		r.Get("/products", h.HandleAdminListProducts)
-		r.Post("/products", h.HandleCreateProduct)
-		r.Put("/products/{id}", h.HandleUpdateProduct)
-		r.Delete("/products/{id}", h.HandleDeleteProduct)
+	router.Route("/api/admin", func(ar chi.Router) {
+		ar.Use(h.AdminOnly)
+
+		ar.Get("/products", h.HandleAdminListProducts)
+		ar.Post("/products", h.HandleCreateProduct)
+		ar.Put("/products/{id}", h.HandleUpdateProduct)
+		ar.Delete("/products/{id}", h.HandleDeleteProduct)
 		
-		r.Get("/orders/pending", h.HandleListPendingOrders)
-		r.Post("/orders/{id}/status", h.HandleUpdateOrderStatus)
+		ar.Get("/orders/pending", h.HandleListPendingOrders)
+		ar.Post("/orders/{id}/status", h.HandleUpdateOrderStatus)
 	})
 
 	router.ServeHTTP(w, r)
