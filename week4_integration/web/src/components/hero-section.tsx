@@ -1,7 +1,16 @@
+"use client"
+
 import Image from "next/image";
 import Container from "./container";
 
 const HeroSection = () => {
+  const scrollToCollections = () => {
+    const collectionsSection = document.getElementById('collections');
+    if (collectionsSection) {
+      collectionsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="relative w-full h-[400px] md:h-auto">
       <Image
@@ -20,7 +29,10 @@ const HeroSection = () => {
         priority
       />
       <div className="absolute inset-0 flex items-end justify-center pb-6 md:pb-12">
-        <button className="hover:scale-110 transition-transform border-0 bg-transparent p-0 cursor-pointer">
+        <button 
+          onClick={scrollToCollections}
+          className="hover:scale-110 transition-transform border-0 bg-transparent p-0 cursor-pointer"
+        >
           <Image
             src="/shop_button.webp"
             alt="Shop Now"

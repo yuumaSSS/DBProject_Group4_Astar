@@ -82,7 +82,7 @@ const Collections = () => {
   });
 
   return (
-    <section className="py-12 md:py-16">
+    <section id="collections" className="py-12 md:py-16">
       <Container>
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12">
           A*Star Collection
