@@ -18,6 +18,15 @@ interface PopUpProps {
 }
 
 const PopUp = ({ product, onClose }: PopUpProps) => {
+  const handleOrderNow = () => {
+    const phoneNumber = "6287714897812"; // +62 877-1489-7812 without + and spaces
+    const message = `Hai admin saya ingin order ${product.productName} yang memiliki Id ${product.productId}. Mohon pesanan saya diproses ya`;
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white relative max-w-4xl w-full md:h-[600px] max-h-[90vh] flex flex-col md:flex-row overflow-auto">
@@ -49,7 +58,10 @@ const PopUp = ({ product, onClose }: PopUpProps) => {
             <p className="text-base md:text-lg">
               <span className="font-semibold">Available:</span> {product.productStock} items
             </p>
-            <button className="bg-[#5B6EE1] text-white px-6 md:px-8 py-2 md:py-3 font-semibold hover:bg-[#4a5dd0] transition-colors w-full mt-2">
+            <button 
+              onClick={handleOrderNow}
+              className="bg-[#5B6EE1] text-white px-6 md:px-8 py-2 md:py-3 font-semibold hover:bg-[#4a5dd0] transition-colors w-full mt-2"
+            >
               Order Now
             </button>
           </div>

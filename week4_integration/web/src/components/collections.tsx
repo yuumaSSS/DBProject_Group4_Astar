@@ -1,9 +1,6 @@
-"use client"
-
-import Image from "next/image";
 import Container from "./container";
-import PopUp from "./pop-up";
-import { useState } from "react";
+import ProductGrid from "./product-grid";
+import { getProducts } from "@/lib/fetch-product";
 
 const dummyProducts = [
   {
@@ -72,10 +69,28 @@ const dummyProducts = [
   },
 ];
 
-const Collections = () => {
-  const [selectedProduct, setSelectedProduct] = useState<typeof dummyProducts[0] | null>(null);
+const Collections = async () => {
+  let products = dummyProducts;
 
-  const sortedProducts = [...dummyProducts].sort((a, b) => {
+  try {
+    const apiProducts = await getProducts();
+    
+    // Map API data to our product format
+    products = apiProducts.map((item) => ({
+      productId: item.product_id,
+      productName: item.product_name,
+      productPrice: item.unit_price,
+      productImage: item.image_url || "/tufy_hoodie.webp",
+      productStock: item.stock,
+      productCategory: item.category || "Uncategorized",
+    }));
+  } catch (error) {
+    console.error("Failed to fetch products, using dummy data:", error);
+    // products akan tetap menggunakan dummyProducts
+  }
+
+  // Sort products: in-stock first, out-of-stock last
+  const sortedProducts = [...products].sort((a, b) => {
     if (a.productStock === 0 && b.productStock > 0) return 1;
     if (a.productStock > 0 && b.productStock === 0) return -1;
     return 0;
@@ -87,45 +102,8 @@ const Collections = () => {
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12">
           A*Star Collection
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {sortedProducts.map((product) => (
-            <div
-              key={product.productId}
-              onClick={() => product.productStock > 0 && setSelectedProduct(product)}
-              className={`flex flex-col gap-2 p-3 md:p-4 hover:shadow-lg transition-shadow rounded-lg relative ${product.productStock > 0 ? 'cursor-pointer' : 'cursor-not-allowed'}`}
-            >
-              <div className="relative aspect-5/7 w-full overflow-hidden rounded-lg bg-gray-100">
-                <Image
-                  src={product.productImage}
-                  alt={product.productName}
-                  fill
-                  className="object-cover"
-                />
-                {product.productStock === 0 && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <p className="text-white font-bold text-lg md:text-xl">OUT OF STOCK</p>
-                  </div>
-                )}
-              </div>
-              <div className="">
-                <h3 className="font-semibold text-sm md:text-base">
-                  {product.productName}
-                </h3>
-                <div className="text-xs md:text-sm text-white my-1">
-                  <p className="bg-[#5B6EE1] px-2 py-1 inline-block">{product.productCategory}</p>
-                </div>
-                <p className="font-bold text-sm md:text-base text-[#5B6EE1]">
-                  Rp {product.productPrice.toLocaleString("id-ID")}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <ProductGrid products={sortedProducts} />
       </Container>
-
-      {selectedProduct && (
-        <PopUp product={selectedProduct} onClose={() => setSelectedProduct(null)} />
-      )}
     </section>
   );
 };
