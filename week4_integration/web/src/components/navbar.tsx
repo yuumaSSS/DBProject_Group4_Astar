@@ -1,6 +1,7 @@
 import Container from "./container";
 import Image from "next/image";
 import { Search, ShoppingCart, User } from "lucide-react";
+import Link from "next/link";
 
 const Navbar = () => {
   return (
@@ -12,7 +13,10 @@ const Navbar = () => {
         <div className="flex gap-8 text-black">
           <Search />
           <ShoppingCart />
-          <User />
+
+          <Link href="/register">
+            <User />
+          </Link>
         </div>
       </Container>
     </div>
