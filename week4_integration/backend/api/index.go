@@ -10,17 +10,20 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/nedpals/supabase-go"
 
 	"backend/pkg/handler"
 )
 
 var (
-	db   *pgxpool.Pool
-	once sync.Once
+	db       *pgxpool.Pool
+	sb       *supabase.Client
+	dbOnce   sync.Once
+	sbOnce   sync.Once
 )
 
 func InitDB() *pgxpool.Pool {
-	once.Do(func() {
+	dbOnce.Do(func() {
 		dbUrl := os.Getenv("DATABASE_URL")
 		var err error
 		db, err = pgxpool.New(context.Background(), dbUrl)
@@ -31,24 +34,34 @@ func InitDB() *pgxpool.Pool {
 	return db
 }
 
+func InitSupabase() *supabase.Client {
+	sbOnce.Do(func() {
+		sbURL := os.Getenv("SUPABASE_URL")
+		sbKey := os.Getenv("SUPABASE_KEY")
+		sb = supabase.CreateClient(sbURL, sbKey)
+	})
+	return sb
+}
+
 func Handler(w http.ResponseWriter, r *http.Request) {
 	database := InitDB()
-	if database == nil {
-		http.Error(w, "Database Connection Failed", 500)
+	supabaseClient := InitSupabase()
+
+	if database == nil || supabaseClient == nil {
+		http.Error(w, "Service Configuration Failed", 500)
 		return
 	}
 
-	h := handler.NewHttpServer(database)
+	h := handler.NewHttpServer(database, supabaseClient)
 	
 	router := chi.NewRouter()
 	router.Use(EnableCORS)
 
-	
-	// Public
+	router.Post("/api/auth/register", h.HandleRegister)
+
 	router.Get("/api/products", h.HandleListPublicProducts)
 	router.Get("/api/products/{id}", h.HandleGetProductDetail)
 
-	// Admin (Mobile)
 	router.Route("/api/admin", func(ar chi.Router) {
 		ar.Use(h.AdminOnly)
 

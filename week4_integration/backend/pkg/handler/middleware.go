@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -23,9 +24,16 @@ func (h *HttpServer) AdminOnly(next http.Handler) http.Handler {
 		}
 		tokenString := parts[1]
 
-		token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
-		if err != nil {
-			http.Error(w, "Unauthorized: Bad token", http.StatusUnauthorized)
+		jwtSecret := []byte(os.Getenv("SUPABASE_JWT_SECRET"))
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, http.ErrAbortHandler
+			}
+			return jwtSecret, nil
+		})
+
+		if err != nil || !token.Valid {
+			http.Error(w, "Unauthorized: Invalid token", http.StatusUnauthorized)
 			return
 		}
 
@@ -34,8 +42,8 @@ func (h *HttpServer) AdminOnly(next http.Handler) http.Handler {
 			http.Error(w, "Unauthorized: Invalid claims", http.StatusUnauthorized)
 			return
 		}
-		
-		userIDStr, ok := claims["sub"].(string) 
+
+		userIDStr, ok := claims["sub"].(string)
 		if !ok {
 			http.Error(w, "Unauthorized: No user ID found in token", http.StatusUnauthorized)
 			return
@@ -43,7 +51,7 @@ func (h *HttpServer) AdminOnly(next http.Handler) http.Handler {
 
 		var role string
 		err = h.DB.QueryRow(r.Context(), "SELECT role FROM users WHERE user_id = $1", userIDStr).Scan(&role)
-		
+
 		if err != nil {
 			http.Error(w, "Forbidden: User not registered", http.StatusForbidden)
 			return
