@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 class Header extends StatelessWidget {
   final String title;
-  const Header({super.key, required this.title});
+  final bool dark;
+
+  const Header({super.key, required this.title, required this.dark});
 
   @override
   Widget build(BuildContext context) {
@@ -17,17 +19,21 @@ class Header extends StatelessWidget {
         child: Text(
           title,
           style: TextStyle(
-            color: Colors.black,
+            color: dark ? Colors.white : Colors.black,
             fontFamily: 'Monocraft',
             fontWeight: FontWeight.w600,
             fontSize: 40,
-            shadows: [Shadow(
-              color: Color.fromARGB(64, 0, 0, 0),
-              offset: Offset(0, 4),
-            )]
+            shadows: [
+              Shadow(
+                color: dark
+                    ? Color.fromARGB(64, 255, 255, 255)
+                    : Color.fromARGB(64, 0, 0, 0),
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
         ),
-      )
+      ),
     );
   }
 }

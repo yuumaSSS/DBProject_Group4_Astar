@@ -31,8 +31,10 @@ class _MainWrapperState extends State<MainWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       body: SafeArea(
         top: true,
         bottom: false,
@@ -56,7 +58,7 @@ class _MainWrapperState extends State<MainWrapper> {
         ),
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(color: Colors.black),
+        decoration: BoxDecoration(color: Colors.black),
         child: SafeArea(
           top: false,
           bottom: true,

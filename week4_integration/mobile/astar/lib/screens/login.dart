@@ -1,47 +1,73 @@
 import 'package:flutter/material.dart';
+import '../widgets/button_signin.dart';
 import '../widgets/input_email.dart';
 import '../widgets/input_pass.dart';
-import '../widgets/button_signin.dart';
 
-class LoginScreen extends StatelessWidget {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passController = TextEditingController();
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
-  LoginScreen({super.key});
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  late final TextEditingController emailController;
+  late final TextEditingController passController;
+
+  @override
+  void initState() {
+    super.initState();
+    emailController = TextEditingController();
+    passController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
-      onTap: () {
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: isDarkMode ? Colors.black : Colors.white,
         body: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(50.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  SizedBox(
-                    height: 180,
-                    child: Image.asset(
-                      'assets/images/icons/logo_login.png',
-                      fit: BoxFit.contain,
-                    ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 40.0,
+              vertical: 20.0,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                SizedBox(
+                  height: 160,
+                  child: Image.asset(
+                    isDarkMode
+                        ? 'assets/images/icons/icon_d.png'
+                        : 'assets/images/icons/icon.png',
+                    fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 40),
+                ),
+                const SizedBox(height: 20),
 
-                  InputEmail(controller: emailController),
-                  const SizedBox(height: 15),
-                  InputPass(controller: passController),
-                  const SizedBox(height: 15),
+                InputEmail(controller: emailController, dark: isDarkMode),
+                const SizedBox(height: 20),
 
-                  SignInButton(email: emailController, pass: passController),
-                ],
-              ),
+                InputPass(controller: passController, dark: isDarkMode),
+
+                const SizedBox(height: 35),
+
+                SignInButton(email: emailController, pass: passController, dark: isDarkMode,),
+              ],
             ),
           ),
+        ),
       ),
     );
   }

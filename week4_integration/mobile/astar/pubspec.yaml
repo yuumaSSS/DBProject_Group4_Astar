@@ -44,6 +44,7 @@ dependencies:
   flutter_dotenv: ^6.0.0
   image_picker: ^1.2.1
   cached_network_image: ^3.4.1
+  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -75,7 +76,9 @@ flutter:
   assets:
     - .env
       
-    - assets/images/icons/logo_login.png
+    - assets/images/icons/icon.png
+    - assets/images/icons/icon_d.png
+    - assets/images/icons/icon_b.png
     - assets/images/icons/manage.png
     - assets/images/icons/manage_c.png
     - assets/images/icons/about.png
@@ -83,6 +86,9 @@ flutter:
     - assets/images/icons/thufail.png
     - assets/images/icons/dhimas.png
     - assets/images/icons/faris.png
+
+    - assets/images/icons/splash.png
+    - assets/images/icons/splash_d.png
     
     - assets/gif/splash_unlock.gif
 
@@ -125,9 +131,20 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/icons/icon.png"
-  adaptive_icon_foreground: "assets/images/icons/icon_t.png"
+  image_path: "assets/images/icons/icon_b.png"
+  adaptive_icon_foreground: "assets/images/icons/icon.png"
   min_sdk_android: 21
   adaptive_icon_background: "#FFFFFF"
   remove_alpha_ios: true
   background_color_ios: "#FFFFFF"
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  color_dark: "#000000"
+  image: "assets/images/icons/splash.png"
+  image_dark: "assets/images/icons/splash_d.png"
+  android_12:
+    color: "#FFFFFF"
+    color_dark: "#000000"
+    image: "assets/images/icons/splash.png"
+    image_dark: "assets/images/icons/splash_d.png"

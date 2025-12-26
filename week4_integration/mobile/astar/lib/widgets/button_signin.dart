@@ -5,8 +5,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class SignInButton extends StatefulWidget {
   final TextEditingController email;
   final TextEditingController pass;
+  final bool dark;
 
-  const SignInButton({super.key, required this.email, required this.pass});
+  const SignInButton({
+    super.key,
+    required this.email,
+    required this.pass,
+    required this.dark,
+  });
 
   @override
   State<SignInButton> createState() => _SignInButtonState();
@@ -58,7 +64,13 @@ class _SignInButtonState extends State<SignInButton> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg),
+        content: Text(
+          msg.toUpperCase(),
+          style: TextStyle(
+            fontFamily: 'Monocraft',
+            color: widget.dark ? Colors.white : Colors.black,
+          ),
+        ),
         backgroundColor: isError ? Colors.red : Colors.green,
       ),
     );
@@ -70,7 +82,7 @@ class _SignInButtonState extends State<SignInButton> {
       color: Color(0xFF5B6EE1),
       borderRadius: BorderRadius.all(Radius.zero),
       child: InkWell(
-        onTap: _isLoading? null : _handleSignIn,
+        onTap: _isLoading ? null : _handleSignIn,
         splashColor: const Color.fromARGB(255, 216, 216, 216),
         borderRadius: BorderRadius.all(Radius.zero),
         enableFeedback: false,
@@ -78,8 +90,8 @@ class _SignInButtonState extends State<SignInButton> {
           padding: EdgeInsetsGeometry.directional(
             start: 10,
             end: 10,
-            top: 1,
-            bottom: 1,
+            top: 5,
+            bottom: 5,
           ),
           child: Text(
             'Sign In',

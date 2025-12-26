@@ -55,9 +55,11 @@ class _AboutScreenState extends State<AboutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
-        const Header(title: 'About Us'),
+        Header(title: 'About Us', dark: isDarkMode,),
         Expanded(
           child: Center(
             child: SingleChildScrollView(

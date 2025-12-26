@@ -21,7 +21,6 @@ class ManageScreen extends StatefulWidget {
 class _ManageScreenState extends State<ManageScreen>
     with AutomaticKeepAliveClientMixin {
   final ApiService _apiService = ApiService();
-  late Future<List<Product>> _productsFuture;
   late ScrollController _scrollController;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -41,8 +40,11 @@ class _ManageScreenState extends State<ManageScreen>
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+
     _searchFocusNode.addListener(() {
-      setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
+      if (mounted) {
+        setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
+      }
     });
   }
 
@@ -63,7 +65,6 @@ class _ManageScreenState extends State<ManageScreen>
       if (extra != null && extra is List<Product>) {
         _allProducts = extra;
         _filteredProducts = List.from(_allProducts);
-        _productsFuture = Future.value(_allProducts);
       } else {
         _loadData();
       }
@@ -72,24 +73,28 @@ class _ManageScreenState extends State<ManageScreen>
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _productsFuture = _apiService.fetchProducts();
-    });
+    // Selalu cek mounted sebelum setState
+    if (!mounted) return;
+    setState(() => _isLoading = true);
 
     try {
-      final products = await _productsFuture;
+      final products = await _apiService.fetchProducts();
+
+      if (!mounted) return;
+
       setState(() {
         _allProducts = products;
         _filterProducts(_searchController.text);
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
     }
   }
 
   void _filterProducts(String query) {
+    if (!mounted) return;
     setState(() {
       if (query.isEmpty) {
         _filteredProducts = List.from(_allProducts);
@@ -106,6 +111,7 @@ class _ManageScreenState extends State<ManageScreen>
   }
 
   void _openFormOverlay([Product? product]) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     HapticFeedback.lightImpact();
     showModalBottomSheet(
       context: context,
@@ -123,16 +129,20 @@ class _ManageScreenState extends State<ManageScreen>
             }
             _loadData();
           } catch (e) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text("Action failed: $e")));
+            if (mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text("Action failed: $e")));
+            }
           }
         },
+        dark: isDarkMode,
       ),
     );
   }
 
   void _showDeleteConfirm(int id) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     HapticFeedback.heavyImpact();
     showDialog(
       useSafeArea: true,
@@ -141,11 +151,11 @@ class _ManageScreenState extends State<ManageScreen>
       builder: (context) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: AlertDialog(
-          backgroundColor: Colors.white,
+          backgroundColor: isDarkMode ? Colors.black : Colors.white,
           surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Color(0xFFEEF2F6), width: 1),
+            side: BorderSide(color: isDarkMode ? Colors.black : Color(0xFFEEF2F6), width: 1),
           ),
           title: const Icon(
             Icons.warning_amber_rounded,
@@ -155,16 +165,17 @@ class _ManageScreenState extends State<ManageScreen>
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 "CONFIRM DELETE",
                 style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
                   fontFamily: 'Monocraft',
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
-              const SizedBox(height: 10),
-              const Text(
+              SizedBox(height: 10),
+              Text(
                 "This action will permanently remove the item from stock database.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -196,9 +207,11 @@ class _ManageScreenState extends State<ManageScreen>
                   await _apiService.deleteProduct(id);
                   _loadData();
                 } catch (e) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text("Delete failed: $e")));
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Delete failed: $e")),
+                    );
+                  }
                 }
               },
               child: const Text(
@@ -226,11 +239,13 @@ class _ManageScreenState extends State<ManageScreen>
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     super.build(context);
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: isDarkMode ? Colors.black : Colors.white,
         floatingActionButton: FloatingActionButton.extended(
           isExtended: _isFabExtended,
           backgroundColor: const Color(0xFF5B6EE1),
@@ -251,11 +266,11 @@ class _ManageScreenState extends State<ManageScreen>
         ),
         body: RefreshIndicator(
           color: const Color(0xFF5B6EE1),
-          backgroundColor: Colors.white,
           onRefresh: _loadData,
           child: Column(
             children: [
-              const Header(title: 'Manage'),
+              Header(title: 'Manage', dark: isDarkMode),
+              // Search Bar dengan animasi focus
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16.0,
@@ -297,7 +312,7 @@ class _ManageScreenState extends State<ManageScreen>
                       hintStyle: const TextStyle(
                         fontFamily: 'Monocraft',
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: Color(0xFF9D9D9D),
                       ),
                       prefixIcon: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
@@ -306,7 +321,7 @@ class _ManageScreenState extends State<ManageScreen>
                           key: ValueKey(_isSearchFocused),
                           color: _isSearchFocused
                               ? const Color(0xFF5B6EE1)
-                              : Colors.grey,
+                              : Color(0xFF9D9D9D),
                         ),
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
@@ -314,7 +329,7 @@ class _ManageScreenState extends State<ManageScreen>
                               icon: const Icon(
                                 Icons.close_rounded,
                                 size: 18,
-                                color: Colors.grey,
+                                color: Color(0xFF9D9D9D),
                               ),
                               onPressed: () {
                                 HapticFeedback.selectionClick();
@@ -342,7 +357,7 @@ class _ManageScreenState extends State<ManageScreen>
                           "No products found",
                           style: TextStyle(
                             fontFamily: 'Monocraft',
-                            color: Colors.grey,
+                            color: Color(0xFF9D9D9D),
                           ),
                         ),
                       )
@@ -354,7 +369,7 @@ class _ManageScreenState extends State<ManageScreen>
                                 scrollNotification.direction ==
                                     ScrollDirection.reverse) {
                               _fabTimer?.cancel();
-                              if (_isFabExtended) {
+                              if (_isFabExtended && mounted) {
                                 setState(() => _isFabExtended = false);
                               }
                             }
@@ -428,7 +443,6 @@ class _ManageScreenState extends State<ManageScreen>
                     width: double.infinity,
                     height: double.infinity,
                     fit: BoxFit.cover,
-                    // Mengoptimalkan penggunaan RAM dengan membatasi ukuran cache di memori
                     memCacheHeight: 400,
                     placeholder: (context, url) => Container(
                       color: Colors.grey.withAlpha(50),
@@ -436,16 +450,12 @@ class _ManageScreenState extends State<ManageScreen>
                         child: SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFF5B6EE1),
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),
                     ),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey.withAlpha(30),
-                      child: const Icon(Icons.broken_image, color: Colors.grey),
+                    errorWidget: (context, url, error) => const Center(
+                      child: Icon(Icons.broken_image, color: Color(0xFF9D9D9D)),
                     ),
                   ),
                 ),
@@ -466,6 +476,7 @@ class _ManageScreenState extends State<ManageScreen>
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
+                              color: Colors.black,
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
                               fontFamily: 'Monocraft',

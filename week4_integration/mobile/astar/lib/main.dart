@@ -14,9 +14,9 @@ void main() async {
 
   await Supabase.initialize(
     url: dotenv.env['SUPA_URL'] ?? '',
-    anonKey: dotenv.env['SUPA_ANONKEY'] ?? ''
+    anonKey: dotenv.env['SUPA_ANONKEY'] ?? '',
   );
-  
+
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -102,6 +102,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       routerConfig: _router,
+
+      theme: ThemeData(useMaterial3: true, brightness: Brightness.light),
+      darkTheme: ThemeData(useMaterial3: true, brightness: Brightness.dark),
+      themeMode: ThemeMode.system,
     );
   }
 }
