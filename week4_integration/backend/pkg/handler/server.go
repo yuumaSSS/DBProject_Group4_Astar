@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/nedpals/supabase-go"
 
 	"backend/pkg/app/admindb"
 	"backend/pkg/app/publicdb"
@@ -19,13 +20,15 @@ type HttpServer struct {
 	DB      *pgxpool.Pool
 	PublicQ *publicdb.Queries
 	AdminQ  *admindb.Queries
+	SupabaseClient *supabase.Client
 }
 
-func NewHttpServer(db *pgxpool.Pool) *HttpServer {
+func NewHttpServer(db *pgxpool.Pool, sb *supabase.Client) *HttpServer {
 	return &HttpServer{
 		DB:      db,
 		PublicQ: publicdb.New(db),
 		AdminQ:  admindb.New(db),
+		SupabaseClient: sb,
 	}
 }
 
@@ -35,6 +38,44 @@ func writeJSON(w http.ResponseWriter, data interface{}) {
 }
 
 // Web
+
+func (h *HttpServer) HandleRegister(w http.ResponseWriter, r *http.Request) {
+    var req struct {
+        Email       string `json:"email"`
+        Password    string `json:"password"`
+        Username    string `json:"username"`
+        FullName    string `json:"full_name"`
+        PhoneNumber string `json:"phone_number"`
+        Street      string `json:"street"`
+        City        string `json:"city"`
+        PostCode    string `json:"post_code"`
+    }
+
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, "Invalid input", 400)
+        return
+    }
+
+    _, err := h.SupabaseClient.Auth.SignUp(r.Context(), supabase.UserCredentials{
+        Email:    req.Email,
+        Password: req.Password,
+        Data: map[string]interface{}{
+            "username":     req.Username,
+            "full_name":    req.FullName,
+            "phone_number": req.PhoneNumber,
+            "street":       req.Street,
+            "city":         req.City,
+            "post_code":    req.PostCode,
+        },
+    })
+
+    if err != nil {
+        http.Error(w, "Gagal mendaftar: "+err.Error(), 500)
+        return
+    }
+
+    writeJSON(w, map[string]string{"message": "Registrasi berhasil"})
+}
 
 func (h *HttpServer) HandleListPublicProducts(w http.ResponseWriter, r *http.Request) {
 	products, err := h.PublicQ.ListAvailableProducts(r.Context())
