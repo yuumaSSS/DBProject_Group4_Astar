@@ -41,7 +41,7 @@ const Footer = () => {
             className="w-9 h-9 md:w-10 md:h-10 object-cover"
           />
           <Image
-            src="/faris_1.webp"
+            src="/faris.webp"
             alt="Faris"
             width={80}
             height={80}

@@ -1,7 +1,9 @@
-"use client"
+"use client";
 
 import Image from "next/image";
 import { X } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation"; // Import router
 
 interface Product {
   productId: number;
@@ -18,13 +20,57 @@ interface PopUpProps {
 }
 
 const PopUp = ({ product, onClose }: PopUpProps) => {
-  const handleOrderNow = () => {
-    const phoneNumber = "6287714897812"; // +62 877-1489-7812 without + and spaces
-    const message = `Hai admin saya ingin order ${product.productName} yang memiliki Id ${product.productId}. Mohon pesanan saya diproses ya`;
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-    
-    window.open(whatsappUrl, '_blank');
+  const router = useRouter(); // Inisialisasi router
+
+  const handleOrderNow = async () => {
+    try {
+      // 1. Cek status login user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // 2. PROTEKSI: Jika tidak ada user, arahkan ke register
+      if (!user) {
+        alert("You must have an account to place an order!");
+        router.push("/register");
+        return; // Hentikan fungsi agar tidak lanjut ke WhatsApp
+      }
+
+      // 3. Jika user login, tarik data alamat lengkap dari tabel 'users'
+      let addressInfo = "";
+      const { data: profile } = await supabase
+        .from('users')
+        .select('full_name, phone_number, street, city, post_code')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profile) {
+        addressInfo = `
+*--- DATA PENGIRIMAN ---*
+*Nama:* ${profile.full_name}
+*No. HP:* ${profile.phone_number}
+*Alamat:* ${profile.street}
+*Kota:* ${profile.city}
+*Kode Pos:* ${profile.post_code}
+*----------------------*`;
+      }
+
+      // 4. Susun pesan WhatsApp
+      const phoneNumber = "6281357135429";
+      const message = `Hai admin saya ingin order:
+*Produk:* ${product.productName} 
+*ID:* ${product.productId}
+*Harga:* Rp ${product.productPrice.toLocaleString("id-ID")}
+${addressInfo}
+
+Mohon pesanan saya diproses ya, terima kasih!`;
+
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+      
+      window.open(whatsappUrl, '_blank');
+    } catch (error) {
+      console.error("Gagal memproses order:", error);
+      alert("Terjadi kesalahan teknis. Silakan coba lagi.");
+    }
   };
 
   return (
