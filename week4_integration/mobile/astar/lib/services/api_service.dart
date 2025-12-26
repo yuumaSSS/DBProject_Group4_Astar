@@ -19,8 +19,8 @@ class ApiService {
   }
 
   Future<String> uploadImage(File file) async {
-    final fileName = 'product_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final path = 'items/$fileName';
+    final fileName = 'product_${DateTime.now().millisecondsSinceEpoch}.webp';
+    final path = fileName;
 
     await _supabase.storage.from('products').upload(path, file);
     return _supabase.storage.from('products').getPublicUrl(path);
