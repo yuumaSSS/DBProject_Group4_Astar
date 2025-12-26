@@ -41,6 +41,9 @@ dependencies:
   supabase_flutter: ^2.10.3
   http: ^1.6.0
   intl: ^0.20.2
+  flutter_dotenv: ^6.0.0
+  image_picker: ^1.2.1
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:
@@ -70,9 +73,9 @@ flutter:
   #   - images/a_dot_ham.jpeg
 
   assets:
+    - .env
+      
     - assets/images/icons/logo_login.png
-    - assets/images/icons/stock.png
-    - assets/images/icons/stock_c.png
     - assets/images/icons/manage.png
     - assets/images/icons/manage_c.png
     - assets/images/icons/about.png
@@ -80,8 +83,10 @@ flutter:
     - assets/images/icons/thufail.png
     - assets/images/icons/dhimas.png
     - assets/images/icons/faris.png
+    
+    - assets/gif/splash_unlock.gif
 
-    - assets/sounds/anime-chill-music-remix.mp3
+    - assets/sounds/soul-calibur-ii-iii-secret-unlocked.mp3
     - assets/sounds/mc-hurt.mp3
 
   # An image asset can refer to one or more resolution-specific "variants", see

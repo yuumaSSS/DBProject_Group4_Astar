@@ -70,7 +70,7 @@ class _SignInButtonState extends State<SignInButton> {
       color: Color(0xFF5B6EE1),
       borderRadius: BorderRadius.all(Radius.zero),
       child: InkWell(
-        onTap: _handleSignIn,
+        onTap: _isLoading? null : _handleSignIn,
         splashColor: const Color.fromARGB(255, 216, 216, 216),
         borderRadius: BorderRadius.all(Radius.zero),
         enableFeedback: false,
