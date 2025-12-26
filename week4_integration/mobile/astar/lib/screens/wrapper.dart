@@ -67,30 +67,21 @@ class _MainWrapperState extends State<MainWrapper> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 BottomNav(
-                  label: "Stock",
-                  imgPath: "assets/images/icons/stock.png",
-                  activeImgPath: "assets/images/icons/stock_c.png",
+                  label: "Manage",
+                  imgPath: "assets/images/icons/manage.png",
+                  activeImgPath: "assets/images/icons/manage_c.png",
                   isSelected: widget.navigationShell.currentIndex == 0,
                   onTap: () {
                     _goBranch(0);
                   },
                 ),
                 BottomNav(
-                  label: "Manage",
-                  imgPath: "assets/images/icons/manage.png",
-                  activeImgPath: "assets/images/icons/manage_c.png",
-                  isSelected: widget.navigationShell.currentIndex == 1,
-                  onTap: () {
-                    _goBranch(1);
-                  },
-                ),
-                BottomNav(
                   label: "About",
                   imgPath: "assets/images/icons/about.png",
                   activeImgPath: "assets/images/icons/about_c.png",
-                  isSelected: widget.navigationShell.currentIndex == 2,
+                  isSelected: widget.navigationShell.currentIndex == 1,
                   onTap: () {
-                    _goBranch(2);
+                    _goBranch(1);
                   },
                 ),
               ],

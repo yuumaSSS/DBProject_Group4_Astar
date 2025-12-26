@@ -6,12 +6,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/login.dart';
 import 'screens/loading.dart';
 import 'screens/wrapper.dart';
-import 'screens/stock.dart';
 import 'screens/manage.dart';
 import 'screens/about.dart';
-import 'screens/manage_add.dart';
-import 'screens/manage_update.dart';
-import 'screens/manage_delete.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -79,31 +75,8 @@ final GoRouter _router = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/stock',
-              builder: (context, state) => const StockScreen(),
-            ),
-          ],
-        ),
-
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
               path: '/manage',
               builder: (context, state) => const ManageScreen(),
-              routes: [
-                GoRoute(
-                  path: 'add',
-                  builder: (context, state) => const ManageAddScreen(),
-                ),
-                GoRoute(
-                  path: 'update',
-                  builder: (context, state) => const ManageUpdateScreen(),
-                ),
-                GoRoute(
-                  path: 'delete',
-                  builder: (context, state) => const ManageDeleteScreen(),
-                ),
-              ],
             ),
           ],
         ),
