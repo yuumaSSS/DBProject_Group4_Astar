@@ -36,7 +36,9 @@ class _OrdersScreenState extends State<OrdersScreen>
 
   String _sanitize(String e) {
     final l = e.toLowerCase();
-    if (l.contains("http") || l.contains("vercel")) return "SERVER ERROR";
+    if (l.contains("http") || l.contains("vercel") || l.contains("socket")) {
+      return "CONNECTION ERROR";
+    }
     if (l.contains("foreign key")) return "USER ID NOT FOUND";
     if (l.contains("uuid")) return "INVALID UUID FORMAT";
     return e.replaceAll("Exception:", "").trim();
@@ -77,12 +79,13 @@ class _OrdersScreenState extends State<OrdersScreen>
       builder: (modalContext) => OrderFormOverlay(
         products: _allProducts,
         dark: Theme.of(context).brightness == Brightness.dark,
-        onSave: (d) async {
-          Navigator.pop(modalContext);
+        onSave: (Map<String, dynamic> d) async {
+          Navigator.pop(modalContext); // Tutup modal dulu
           try {
             await _apiService.createOrder(d);
             _loadData();
-            if (mounted)
+
+            if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text(
@@ -92,6 +95,7 @@ class _OrdersScreenState extends State<OrdersScreen>
                   backgroundColor: Colors.green,
                 ),
               );
+            }
           } catch (e) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +133,11 @@ class _OrdersScreenState extends State<OrdersScreen>
             _buildSummary(dark),
             Expanded(
               child: _isLoading && _displayOrders.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF5B6EE1),
+                      ),
+                    )
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: _displayOrders.length,
@@ -268,10 +276,11 @@ class _OrdersScreenState extends State<OrdersScreen>
                   String n = o.status == 'pending'
                       ? 'process'
                       : (o.status == 'process' ? 'done' : '');
-                  if (n.isNotEmpty)
+                  if (n.isNotEmpty) {
                     _apiService
                         .updateOrderStatus(o.id, n)
                         .then((_) => _loadData());
+                  }
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
