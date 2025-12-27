@@ -21,12 +21,8 @@ class ApiService {
   }
 
   Future<String> uploadImage(File file, String productName) async {
-    String sanitizedName = productName.toLowerCase().replaceAll(
-      RegExp(r'[^a-z0-9]'),
-      '_',
-    );
     final fileName =
-        '${sanitizedName}_${DateTime.now().millisecondsSinceEpoch}.webp';
+        '$productName.webp';
     await _supabase.storage.from('products').upload(fileName, file);
     return _supabase.storage.from('products').getPublicUrl(fileName);
   }

@@ -18,8 +18,7 @@ class ManageScreen extends StatefulWidget {
   State<ManageScreen> createState() => _ManageScreenState();
 }
 
-class _ManageScreenState extends State<ManageScreen>
-    with AutomaticKeepAliveClientMixin {
+class _ManageScreenState extends State<ManageScreen> {
   final ApiService _apiService = ApiService();
   late ScrollController _scrollController;
   final TextEditingController _searchController = TextEditingController();
@@ -34,9 +33,6 @@ class _ManageScreenState extends State<ManageScreen>
   bool _isLoading = false;
   bool _isSearchFocused = false;
   bool _isSelectionMode = false;
-
-  @override
-  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -68,6 +64,8 @@ class _ManageScreenState extends State<ManageScreen>
         _loadData();
       }
       _isInit = false;
+    } else {
+      _loadData();
     }
   }
 
@@ -296,7 +294,7 @@ class _ManageScreenState extends State<ManageScreen>
     final Color surfaceColor = isDarkMode
         ? Colors.white.withAlpha(15)
         : const Color(0xFFEEF2F6);
-    super.build(context);
+
     return PopScope(
       canPop: !_isSelectionMode,
       onPopInvokedWithResult: (didPop, result) {
@@ -335,146 +333,139 @@ class _ManageScreenState extends State<ManageScreen>
               borderRadius: BorderRadius.circular(16),
             ),
           ),
-          body: RefreshIndicator(
-            color: const Color(0xFF5B6EE1),
-            onRefresh: _loadData,
-            child: Column(
-              children: [
-                Header(
-                  title: _isSelectionMode ? 'Selection' : 'Manage',
-                  dark: isDarkMode,
+          body: Column(
+            children: [
+              Header(
+                title: _isSelectionMode ? 'Selection' : 'Manage',
+                dark: isDarkMode,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 12.0,
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 12.0,
-                  ),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    decoration: BoxDecoration(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  decoration: BoxDecoration(
+                    color: _isSearchFocused
+                        ? (isDarkMode
+                              ? Colors.white.withAlpha(30)
+                              : Colors.white)
+                        : surfaceColor,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
                       color: _isSearchFocused
-                          ? (isDarkMode
-                                ? Colors.white.withAlpha(30)
-                                : Colors.white)
-                          : surfaceColor,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
+                          ? const Color(0xFF5B6EE1)
+                          : Colors.white.withAlpha(isDarkMode ? 20 : 0),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    onChanged: _filterProducts,
+                    cursorColor: const Color(0xFF5B6EE1),
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                      fontFamily: 'Monocraft',
+                      fontSize: 13,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Search products',
+                      hintStyle: TextStyle(
+                        fontFamily: 'Monocraft',
+                        fontSize: 12,
+                        color: isDarkMode
+                            ? Colors.white38
+                            : const Color(0xFF9D9D9D),
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
                         color: _isSearchFocused
                             ? const Color(0xFF5B6EE1)
-                            : Colors.white.withAlpha(isDarkMode ? 20 : 0),
-                        width: 1.5,
+                            : (isDarkMode ? Colors.white38 : Colors.grey),
                       ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      focusNode: _searchFocusNode,
-                      onChanged: _filterProducts,
-                      cursorColor: const Color(0xFF5B6EE1),
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
-                        fontFamily: 'Monocraft',
-                        fontSize: 13,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Search products',
-                        hintStyle: TextStyle(
-                          fontFamily: 'Monocraft',
-                          fontSize: 12,
-                          color: isDarkMode
-                              ? Colors.white38
-                              : const Color(0xFF9D9D9D),
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: _isSearchFocused
-                              ? const Color(0xFF5B6EE1)
-                              : (isDarkMode ? Colors.white38 : Colors.grey),
-                        ),
-                        suffixIcon:
-                            _searchController.text.isNotEmpty ||
+                      suffixIcon:
+                          _searchController.text.isNotEmpty || _isSelectionMode
+                          ? IconButton(
+                              icon: Icon(
                                 _isSelectionMode
-                            ? IconButton(
-                                icon: Icon(
-                                  _isSelectionMode
-                                      ? Icons.close_rounded
-                                      : Icons.close_rounded,
-                                  size: 18,
-                                  color: Colors.grey,
-                                ),
-                                onPressed: () {
-                                  if (_isSelectionMode) {
-                                    _exitSelection();
-                                  } else {
-                                    _searchController.clear();
-                                    _filterProducts('');
-                                  }
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                        ),
-                      ),
+                                    ? Icons.close_rounded
+                                    : Icons.close_rounded,
+                                size: 18,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () {
+                                if (_isSelectionMode) {
+                                  _exitSelection();
+                                } else {
+                                  _searchController.clear();
+                                  _filterProducts('');
+                                }
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),
-                Expanded(
-                  child: _isLoading && _filteredProducts.isEmpty
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFF5B6EE1),
-                          ),
-                        )
-                      : _filteredProducts.isEmpty
-                      ? Center(
-                          child: Text(
-                            "No products found",
-                            style: TextStyle(
-                              fontFamily: 'Monocraft',
-                              color: isDarkMode
-                                  ? Colors.white24
-                                  : const Color(0xFF9D9D9D),
-                            ),
-                          ),
-                        )
-                      : NotificationListener<ScrollNotification>(
-                          onNotification: (notif) {
-                            if (notif is UserScrollNotification) {
-                              if (notif.direction != ScrollDirection.idle) {
-                                _fabTimer?.cancel();
-                                if (_isFabExtended) {
-                                  setState(() => _isFabExtended = false);
-                                }
-                              }
-                            } else if (notif is ScrollEndNotification) {
-                              _fabTimer?.cancel();
-                              _fabTimer = Timer(const Duration(seconds: 1), () {
-                                if (mounted && !_isFabExtended) {
-                                  setState(() => _isFabExtended = true);
-                                }
-                              });
-                            }
-                            return true;
-                          },
-                          child: GridView.builder(
-                            padding: const EdgeInsets.all(16),
-                            controller: _scrollController,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 0.55,
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
-                                ),
-                            itemCount: _filteredProducts.length,
-                            itemBuilder: (context, index) =>
-                                _buildStockCard(_filteredProducts[index]),
+              ),
+              Expanded(
+                child: _isLoading && _filteredProducts.isEmpty
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF5B6EE1),
+                        ),
+                      )
+                    : _filteredProducts.isEmpty
+                    ? Center(
+                        child: Text(
+                          "No products found",
+                          style: TextStyle(
+                            fontFamily: 'Monocraft',
+                            color: isDarkMode
+                                ? Colors.white24
+                                : const Color(0xFF9D9D9D),
                           ),
                         ),
-                ),
-              ],
-            ),
+                      )
+                    : NotificationListener<ScrollNotification>(
+                        onNotification: (notif) {
+                          if (notif is UserScrollNotification) {
+                            if (notif.direction != ScrollDirection.idle) {
+                              _fabTimer?.cancel();
+                              if (_isFabExtended) {
+                                setState(() => _isFabExtended = false);
+                              }
+                            }
+                          } else if (notif is ScrollEndNotification) {
+                            _fabTimer?.cancel();
+                            _fabTimer = Timer(const Duration(seconds: 1), () {
+                              if (mounted && !_isFabExtended) {
+                                setState(() => _isFabExtended = true);
+                              }
+                            });
+                          }
+                          return true;
+                        },
+                        child: GridView.builder(
+                          padding: const EdgeInsets.all(16),
+                          controller: _scrollController,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                childAspectRatio: 0.55,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                              ),
+                          itemCount: _filteredProducts.length,
+                          itemBuilder: (context, index) =>
+                              _buildStockCard(_filteredProducts[index]),
+                        ),
+                      ),
+              ),
+            ],
           ),
         ),
       ),

@@ -22,7 +22,7 @@ class _OrderFormOverlayState extends State<OrderFormOverlay> {
   final _formKey = GlobalKey<FormState>();
   final _userIdController = TextEditingController();
   final _qtyController = TextEditingController();
-  
+
   final Map<String, FocusNode> _focusNodes = {
     'user': FocusNode(),
     'qty': FocusNode(),
@@ -99,14 +99,18 @@ class _OrderFormOverlayState extends State<OrderFormOverlay> {
                         return ListTile(
                           title: Text(
                             p.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'Monocraft',
+                              fontWeight: FontWeight.w600,
                               fontSize: 13,
                             ),
                           ),
                           subtitle: Text(
                             "Price: Rp ${p.price.toInt()} | Stock: ${p.stock}",
-                            style: const TextStyle(fontSize: 10),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontFamily: 'Monocraft',
+                            ),
                           ),
                           onTap: () {
                             setState(() => _selectedProduct = p);
@@ -241,7 +245,7 @@ class _OrderFormOverlayState extends State<OrderFormOverlay> {
                               if (_formKey.currentState!.validate()) {
                                 HapticFeedback.mediumImpact();
                                 setState(() => _isSaving = true);
-                                
+
                                 final int cleanTotal = totalCalc.toInt();
 
                                 widget.onSave({
@@ -286,10 +290,7 @@ class _OrderFormOverlayState extends State<OrderFormOverlay> {
                 ? const Color(0xFF1E1E1E)
                 : const Color(0xFFEEF2F6),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.transparent,
-              width: 1.5,
-            ),
+            border: Border.all(color: Colors.transparent, width: 1.5),
           ),
           child: Row(
             children: [
@@ -408,7 +409,8 @@ class _OrderFormOverlayState extends State<OrderFormOverlay> {
               vertical: 12,
             ),
           ),
-          validator: validator ?? (v) => v == null || v.isEmpty ? "Required" : null,
+          validator:
+              validator ?? (v) => v == null || v.isEmpty ? "Required" : null,
         ),
       ),
     );

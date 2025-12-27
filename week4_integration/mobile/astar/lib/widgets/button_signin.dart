@@ -97,7 +97,7 @@ class _SignInButtonState extends State<SignInButton> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: double.infinity,
+      width: MediaQuery.of(context).size.width / 3,
       height: 55,
       child: Material(
         color: const Color(0xFF5B6EE1),
