@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/products.dart';
+import '../models/orders.dart';
 
 class ApiService {
   final String baseUrl = "https://backend-astar.vercel.app";
@@ -18,21 +19,23 @@ class ApiService {
     };
   }
 
-  Future<String> uploadImage(File file) async {
-    final fileName = 'product_${DateTime.now().millisecondsSinceEpoch}.webp';
-    final path = fileName;
-
-    await _supabase.storage.from('products').upload(path, file);
-    return _supabase.storage.from('products').getPublicUrl(path);
+  Future<String> uploadImage(File file, String productName) async {
+    String sanitizedName = productName.toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '_',
+    );
+    final fileName =
+        '${sanitizedName}_${DateTime.now().millisecondsSinceEpoch}.webp';
+    await _supabase.storage.from('products').upload(fileName, file);
+    return _supabase.storage.from('products').getPublicUrl(fileName);
   }
 
   Future<List<Product>> fetchProducts() async {
     final url = Uri.parse('$baseUrl/api/admin/products');
     final response = await http.get(url, headers: _getHeaders());
-
     if (response.statusCode == 200) {
-      List<dynamic> body = jsonDecode(response.body);
-      return body.map((dynamic item) => Product.fromJson(item)).toList();
+      List body = jsonDecode(response.body);
+      return body.map((item) => Product.fromJson(item)).toList();
     } else {
       throw Exception("Failed to load products");
     }
@@ -64,5 +67,32 @@ class ApiService {
     final url = Uri.parse('$baseUrl/api/admin/products/$id');
     final response = await http.delete(url, headers: _getHeaders());
     if (response.statusCode != 200) throw Exception("Failed to delete");
+  }
+
+  Future<void> deleteMultipleProducts(List<int> ids) async {
+    for (int id in ids) {
+      await deleteProduct(id);
+    }
+  }
+
+  Future<List<Order>> fetchOrders() async {
+    final url = Uri.parse('$baseUrl/api/admin/orders');
+    final response = await http.get(url, headers: _getHeaders());
+    if (response.statusCode == 200) {
+      List body = jsonDecode(response.body);
+      return body.map((item) => Order.fromJson(item)).toList();
+    } else {
+      throw Exception("Failed to load orders");
+    }
+  }
+
+  Future<void> updateOrderStatus(int id, String status) async {
+    final url = Uri.parse('$baseUrl/api/admin/orders/$id/status');
+    final response = await http.put(
+      url,
+      headers: _getHeaders(),
+      body: jsonEncode({"status": status}),
+    );
+    if (response.statusCode != 200) throw Exception("Failed to update status");
   }
 }

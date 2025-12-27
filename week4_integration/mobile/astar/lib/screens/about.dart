@@ -49,7 +49,7 @@ class _AboutScreenState extends State<AboutScreen> {
 
   @override
   void dispose() {
-    _player.dispose(); 
+    _player.dispose();
     super.dispose();
   }
 
@@ -59,7 +59,7 @@ class _AboutScreenState extends State<AboutScreen> {
 
     return Column(
       children: [
-        Header(title: 'About Us', dark: isDarkMode,),
+        Header(title: 'About Us', dark: isDarkMode),
         Expanded(
           child: Center(
             child: SingleChildScrollView(
@@ -73,7 +73,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     githubUrl: 'https://github.com/yuumaSSS',
                     isImageLeft: true,
                     onUrlTap: _launchGithub,
-                    onSoundTap: _playSound, 
+                    onSoundTap: _playSound,
                   ),
                   const SizedBox(height: 40),
                   _ProfileItem(
@@ -95,7 +95,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     onUrlTap: _launchGithub,
                     onSoundTap: _playSound,
                   ),
-                  const SizedBox(height: 40)
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -127,6 +127,8 @@ class _ProfileItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     Widget imageWidget = Container(
       height: 100,
       width: 100,
@@ -138,9 +140,7 @@ class _ProfileItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Stack(
           children: [
-            Positioned.fill(
-              child: Image.asset(imagePath, fit: BoxFit.contain),
-            ),
+            Positioned.fill(child: Image.asset(imagePath, fit: BoxFit.contain)),
             Positioned.fill(
               child: Material(
                 color: Colors.transparent,
@@ -171,10 +171,10 @@ class _ProfileItem extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           roles,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             fontFamily: 'Monocraft',
-            color: Color(0xFF455CE7),
+            color: isDarkMode ? const Color(0xFF8B9BFF) : Color(0xFF455CE7),
           ),
         ),
       ],

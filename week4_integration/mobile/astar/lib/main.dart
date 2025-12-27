@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/login.dart';
 import 'screens/loading.dart';
 import 'screens/wrapper.dart';
+import 'screens/orders.dart';
 import 'screens/manage.dart';
 import 'screens/about.dart';
 
@@ -72,6 +73,15 @@ final GoRouter _router = GoRouter(
       },
 
       branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/orders',
+              builder: (context, state) => const OrdersScreen(),
+            ),
+          ],
+        ),
+        
         StatefulShellBranch(
           routes: [
             GoRoute(

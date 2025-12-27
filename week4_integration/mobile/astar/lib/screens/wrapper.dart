@@ -34,7 +34,7 @@ class _MainWrapperState extends State<MainWrapper> {
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.black : Colors.white,
+      backgroundColor: isDarkMode ? Color(0xFF0F111A) : Colors.white,
       body: SafeArea(
         top: true,
         bottom: false,
@@ -70,20 +70,29 @@ class _MainWrapperState extends State<MainWrapper> {
               children: [
                 BottomNav(
                   label: "Manage",
-                  imgPath: "assets/images/icons/manage.png",
-                  activeImgPath: "assets/images/icons/manage_c.png",
+                  imgPath: "assets/images/icons/orders.png",
+                  activeImgPath: "assets/images/icons/orders_c.png",
                   isSelected: widget.navigationShell.currentIndex == 0,
                   onTap: () {
                     _goBranch(0);
                   },
                 ),
                 BottomNav(
-                  label: "About",
-                  imgPath: "assets/images/icons/about.png",
-                  activeImgPath: "assets/images/icons/about_c.png",
+                  label: "Manage",
+                  imgPath: "assets/images/icons/manage.png",
+                  activeImgPath: "assets/images/icons/manage_c.png",
                   isSelected: widget.navigationShell.currentIndex == 1,
                   onTap: () {
                     _goBranch(1);
+                  },
+                ),
+                BottomNav(
+                  label: "About",
+                  imgPath: "assets/images/icons/about.png",
+                  activeImgPath: "assets/images/icons/about_c.png",
+                  isSelected: widget.navigationShell.currentIndex == 2,
+                  onTap: () {
+                    _goBranch(2);
                   },
                 ),
               ],

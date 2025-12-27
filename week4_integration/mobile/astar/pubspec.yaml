@@ -79,6 +79,8 @@ flutter:
     - assets/images/icons/icon.png
     - assets/images/icons/icon_d.png
     - assets/images/icons/icon_b.png
+    - assets/images/icons/orders.png
+    - assets/images/icons/orders_c.png
     - assets/images/icons/manage.png
     - assets/images/icons/manage_c.png
     - assets/images/icons/about.png

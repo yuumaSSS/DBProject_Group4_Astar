@@ -17,11 +17,9 @@ class _InputEmailState extends State<InputEmail> {
   @override
   void initState() {
     super.initState();
-    _focusNode.addListener(() {
-      setState(() {
-        _isFocused = _focusNode.hasFocus;
-      });
-    });
+    _focusNode.addListener(
+      () => setState(() => _isFocused = _focusNode.hasFocus),
+    );
   }
 
   @override
@@ -33,7 +31,12 @@ class _InputEmailState extends State<InputEmail> {
   @override
   Widget build(BuildContext context) {
     final Color titleColor = widget.dark ? Colors.white : Colors.black;
-    final Color currentIconColor = _isFocused ? Color(0xFF5B6EE1) : Color(0xFF9D9D9D);
+    final Color fieldColor = _isFocused
+        ? (widget.dark ? const Color(0xFF2C2C2C) : Colors.white)
+        : (widget.dark ? const Color(0xFF1E1E1E) : const Color(0xFFEEF2F6));
+    final Color iconColor = _isFocused
+        ? const Color(0xFF5B6EE1)
+        : (widget.dark ? Colors.white.withAlpha(100) : const Color(0xFF9D9D9D));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,7 +54,7 @@ class _InputEmailState extends State<InputEmail> {
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           decoration: BoxDecoration(
-            color: _isFocused ? Colors.white : const Color(0xFFEEF2F6),
+            color: fieldColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: _isFocused ? const Color(0xFF5B6EE1) : Colors.transparent,
@@ -68,23 +71,30 @@ class _InputEmailState extends State<InputEmail> {
                 : [],
           ),
           child: TextFormField(
+            cursorColor: const Color(0xFF5B6EE1),
             controller: widget.controller,
             focusNode: _focusNode,
-            style: const TextStyle(
-              color: Colors.black,
+            style: TextStyle(
+              color: widget.dark ? Colors.white : Colors.black,
               fontFamily: 'Monocraft',
               fontSize: 13,
             ),
             decoration: InputDecoration(
               hintText: 'admin@astar.com',
               hintStyle: TextStyle(
-                color: Color(0xFF9D9D9D),
+                color: widget.dark
+                    ? Colors.white.withAlpha(60)
+                    : const Color(0xFF9D9D9D),
                 fontFamily: 'Monocraft',
                 fontSize: 12,
               ),
-              prefixIcon: Icon(Icons.email_outlined, size: 20, color: currentIconColor,),
+              prefixIcon: Icon(
+                Icons.email_outlined,
+                size: 20,
+                color: iconColor,
+              ),
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
+              contentPadding: const EdgeInsets.symmetric(
                 vertical: 14,
                 horizontal: 20,
               ),

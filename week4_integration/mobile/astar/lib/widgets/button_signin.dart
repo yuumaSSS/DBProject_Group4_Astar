@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -21,15 +22,32 @@ class SignInButton extends StatefulWidget {
 class _SignInButtonState extends State<SignInButton> {
   bool _isLoading = false;
 
+  String _sanitizeError(String error) {
+    final lowerError = error.toLowerCase();
+    if (lowerError.contains("http") ||
+        lowerError.contains("vercel") ||
+        lowerError.contains("supabase") ||
+        lowerError.contains("postgrest") ||
+        lowerError.contains("failed host lookup") ||
+        lowerError.contains("xmlhttprequest")) {
+      return "NETWORK ERROR: CHECK YOUR SIGNAL";
+    }
+    if (lowerError.contains("invalid login credentials")) {
+      return "INVALID EMAIL OR PASSWORD";
+    }
+    if (lowerError.contains("user not found")) {
+      return "ACCOUNT NOT REGISTERED";
+    }
+    return error;
+  }
+
   Future<void> _handleSignIn() async {
     setState(() => _isLoading = true);
-
     final email = widget.email.text.trim();
     final pass = widget.pass.text;
 
     try {
       final supabase = Supabase.instance.client;
-
       final AuthResponse res = await supabase.auth.signInWithPassword(
         email: email,
         password: pass,
@@ -48,13 +66,13 @@ class _SignInButtonState extends State<SignInButton> {
         throw "Not an Admin";
       }
 
-      if (mounted) {
-        context.go('/loading');
-      }
+      if (mounted) context.go('/loading');
+    } on SocketException {
+      _showSnackBar("NO INTERNET CONNECTION", isError: true);
     } on AuthException catch (e) {
-      _showSnackBar(e.message, isError: true);
+      _showSnackBar(_sanitizeError(e.message), isError: true);
     } catch (e) {
-      _showSnackBar('Error: $e', isError: true);
+      _showSnackBar(_sanitizeError(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -78,28 +96,35 @@ class _SignInButtonState extends State<SignInButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Color(0xFF5B6EE1),
-      borderRadius: BorderRadius.all(Radius.zero),
-      child: InkWell(
-        onTap: _isLoading ? null : _handleSignIn,
-        splashColor: const Color.fromARGB(255, 216, 216, 216),
-        borderRadius: BorderRadius.all(Radius.zero),
-        enableFeedback: false,
-        child: Padding(
-          padding: EdgeInsetsGeometry.directional(
-            start: 10,
-            end: 10,
-            top: 5,
-            bottom: 5,
-          ),
-          child: Text(
-            'Sign In',
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'Monocraft',
-              fontSize: 20,
-            ),
+    return SizedBox(
+      width: double.infinity,
+      height: 55,
+      child: Material(
+        color: const Color(0xFF5B6EE1),
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: _isLoading ? null : _handleSignIn,
+          splashColor: Colors.white.withAlpha(50),
+          borderRadius: BorderRadius.circular(16),
+          child: Center(
+            child: _isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text(
+                    'SIGN IN',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'Monocraft',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
           ),
         ),
       ),

@@ -25,19 +25,16 @@ class ProductFormOverlay extends StatefulWidget {
 class _ProductFormOverlayState extends State<ProductFormOverlay> {
   final _formKey = GlobalKey<FormState>();
   final ApiService _apiService = ApiService();
-
   late TextEditingController _nameController;
   late TextEditingController _categoryController;
   late TextEditingController _priceController;
   late TextEditingController _stockController;
-
   final Map<String, FocusNode> _focusNodes = {
     'name': FocusNode(),
     'category': FocusNode(),
     'price': FocusNode(),
     'stock': FocusNode(),
   };
-
   File? _selectedImage;
   String? _currentImageUrl;
   bool _isUploading = false;
@@ -56,10 +53,7 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
       text: widget.product?.stock.toString() ?? '',
     );
     _currentImageUrl = widget.product?.imageUrl;
-
-    _focusNodes.forEach((key, node) {
-      node.addListener(() => setState(() {}));
-    });
+    _focusNodes.forEach((key, node) => node.addListener(() => setState(() {})));
   }
 
   @override
@@ -72,21 +66,34 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
     super.dispose();
   }
 
+  String _sanitizeError(String error) {
+    final lowerError = error.toLowerCase();
+    if (lowerError.contains("http") ||
+        lowerError.contains("vercel") ||
+        lowerError.contains("supabase") ||
+        lowerError.contains("socketexception")) {
+      return "NETWORK ERROR: FAILED TO SAVE DATA";
+    }
+    return error;
+  }
+
   Future<void> _pickImage() async {
     HapticFeedback.selectionClick();
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
     if (pickedFile != null) {
       if (pickedFile.path.toLowerCase().endsWith('.webp')) {
         setState(() => _selectedImage = File(pickedFile.path));
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
               "File format must be .webp",
-              style: TextStyle(fontFamily: 'Monocraft'),
+              style: TextStyle(
+                fontFamily: 'Monocraft',
+                color: widget.dark ? Colors.white : Colors.black,
+              ),
             ),
             backgroundColor: Colors.red,
           ),
@@ -98,7 +105,7 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 100),
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 80),
       child: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Container(
@@ -109,8 +116,8 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
             top: 20,
           ),
           decoration: BoxDecoration(
-            color: widget.dark ? Colors.black : Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+            color: widget.dark ? const Color(0xFF121212) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
           ),
           child: Form(
             key: _formKey,
@@ -123,7 +130,9 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
                     height: 4,
                     margin: const EdgeInsets.only(bottom: 20),
                     decoration: BoxDecoration(
-                      color: Colors.grey.withAlpha(50),
+                      color: widget.dark
+                          ? Colors.white.withAlpha(40)
+                          : Colors.grey.withAlpha(50),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -143,10 +152,14 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
                       height: 160,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEEF2F6),
+                        color: widget.dark
+                            ? const Color(0xFF1E1E1E)
+                            : const Color(0xFFEEF2F6),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: const Color(0xFF5B6EE1).withAlpha(30),
+                          color: const Color(
+                            0xFF5B6EE1,
+                          ).withAlpha(widget.dark ? 60 : 30),
                         ),
                       ),
                       child: _selectedImage != null
@@ -169,21 +182,23 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
                                 ),
                               ),
                             )
-                          : const Column(
+                          : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.image_search_rounded,
                                   color: Color(0xFF5B6EE1),
                                   size: 40,
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Text(
                                   "Upload Image",
                                   style: TextStyle(
                                     fontFamily: 'Monocraft',
                                     fontSize: 10,
-                                    color: Color(0xFF9D9D9D),
+                                    color: widget.dark
+                                        ? Colors.white.withAlpha(100)
+                                        : const Color(0xFF9D9D9D),
                                   ),
                                 ),
                               ],
@@ -237,11 +252,11 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
                                 setState(() => _isUploading = true);
                                 try {
                                   String imageUrl = _currentImageUrl ?? '';
-                                  if (_selectedImage != null) {
+                                  if (_selectedImage != null)
                                     imageUrl = await _apiService.uploadImage(
                                       _selectedImage!,
+                                      _nameController.text,
                                     );
-                                  }
                                   widget.onSave({
                                     "name": _nameController.text,
                                     "category": _categoryController.text,
@@ -254,12 +269,21 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
                                   });
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text("Error: $e")),
+                                    SnackBar(
+                                      content: Text(
+                                        _sanitizeError(
+                                          e.toString(),
+                                        ).toUpperCase(),
+                                        style: const TextStyle(
+                                          fontFamily: 'Monocraft',
+                                        ),
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
                                   );
                                 } finally {
-                                  if (mounted) {
+                                  if (mounted)
                                     setState(() => _isUploading = false);
-                                  }
                                 }
                               }
                             },
@@ -292,13 +316,16 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
     bool isNumber = false,
   }) {
     final bool isFocused = focusNode.hasFocus;
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
-          color: isFocused ? Colors.white : const Color(0xFFEEF2F6),
+          color: isFocused
+              ? (widget.dark ? const Color(0xFF2C2C2C) : Colors.white)
+              : (widget.dark
+                    ? const Color(0xFF1E1E1E)
+                    : const Color(0xFFEEF2F6)),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isFocused ? const Color(0xFF5B6EE1) : Colors.transparent,
@@ -321,23 +348,26 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
           style: TextStyle(
             fontFamily: 'Monocraft',
             fontSize: 13,
-            color: Colors.black,
+            color: widget.dark ? Colors.white : Colors.black,
           ),
           decoration: InputDecoration(
             labelText: label,
             labelStyle: TextStyle(
               fontFamily: 'Monocraft',
               fontSize: 12,
-              color: isFocused ? const Color(0xFF5B6EE1) : Color(0xFF9D9D9D),
-            ),
-            errorStyle: const TextStyle(
-              fontFamily: 'Monocraft',
-              fontSize: 10,
-              color: Colors.redAccent,
+              color: isFocused
+                  ? const Color(0xFF5B6EE1)
+                  : (widget.dark
+                        ? Colors.white.withAlpha(100)
+                        : const Color(0xFF9D9D9D)),
             ),
             prefixIcon: Icon(
               icon,
-              color: isFocused ? const Color(0xFF5B6EE1) : Color(0xFF9D9D9D),
+              color: isFocused
+                  ? const Color(0xFF5B6EE1)
+                  : (widget.dark
+                        ? Colors.white.withAlpha(100)
+                        : const Color(0xFF9D9D9D)),
               size: 20,
             ),
             border: InputBorder.none,
