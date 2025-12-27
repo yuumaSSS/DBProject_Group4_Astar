@@ -280,7 +280,7 @@ func (h *HttpServer) HandleUpdateOrderStatus(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if req.Status == "paid" {
+	if req.Status == "done" {
 		orderInfo, err := qtx.GetOrderQuantityAndProduct(r.Context(), int32(orderID))
 		if err != nil {
 			http.Error(w, "Order info not found", 404)
