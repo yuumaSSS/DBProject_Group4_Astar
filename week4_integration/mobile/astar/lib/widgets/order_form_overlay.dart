@@ -21,34 +21,94 @@ class OrderFormOverlay extends StatefulWidget {
 class _OrderFormOverlayState extends State<OrderFormOverlay> {
   final _formKey = GlobalKey<FormState>();
   final _userIdController = TextEditingController();
-  final _productIdController = TextEditingController();
   final _qtyController = TextEditingController();
-  String _selectedStatus = 'pending';
+  Product? _selectedProduct;
   bool _isSaving = false;
 
-  final Map<String, FocusNode> _focusNodes = {
-    'user': FocusNode(),
-    'product': FocusNode(),
-    'qty': FocusNode(),
-  };
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNodes.forEach((key, node) => node.addListener(() => setState(() {})));
+  bool _isValidUUID(String uuid) {
+    return RegExp(
+      r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+      caseSensitive: false,
+    ).hasMatch(uuid);
   }
 
-  @override
-  void dispose() {
-    _userIdController.dispose();
-    _productIdController.dispose();
-    _qtyController.dispose();
-    _focusNodes.forEach((key, node) => node.dispose());
-    super.dispose();
+  void _showProductPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.6,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: widget.dark ? const Color(0xFF1A1C26) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.grey.withAlpha(50),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Text(
+              "SELECT PRODUCT",
+              style: TextStyle(
+                fontFamily: 'Monocraft',
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 15),
+            Expanded(
+              child: widget.products.isEmpty
+                  ? const Center(
+                      child: Text(
+                        "NO PRODUCTS AVAILABLE",
+                        style: TextStyle(fontFamily: 'Monocraft'),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: widget.products.length,
+                      itemBuilder: (context, i) {
+                        final p = widget.products[i];
+                        return ListTile(
+                          title: Text(
+                            p.name,
+                            style: const TextStyle(
+                              fontFamily: 'Monocraft',
+                              fontSize: 13,
+                            ),
+                          ),
+                          subtitle: Text(
+                            "Price: Rp ${p.price.toInt()} | Stock: ${p.stock}",
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                          onTap: () {
+                            setState(() => _selectedProduct = p);
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    // 1. Variabel ini bernama 'totalCalc'
+    final double totalCalc =
+        (_selectedProduct?.price ?? 0) *
+        (int.tryParse(_qtyController.text) ?? 0);
+
     return Padding(
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 80),
       child: Container(
@@ -87,62 +147,91 @@ class _OrderFormOverlayState extends State<OrderFormOverlay> {
                   ),
                 ),
                 const SizedBox(height: 25),
-                _buildField(
-                  _userIdController,
-                  _focusNodes['user']!,
-                  "User ID",
-                  Icons.person_outline,
-                ),
-                _buildField(
-                  _productIdController,
-                  _focusNodes['product']!,
-                  "Product ID",
-                  Icons.inventory_2_outlined,
-                  isNum: true,
-                ),
-                _buildField(
-                  _qtyController,
-                  _focusNodes['qty']!,
-                  "Quantity",
-                  Icons.shopping_cart_outlined,
-                  isNum: true,
-                ),
-                const SizedBox(height: 10),
-                DropdownButtonFormField<String>(
-                  value: _selectedStatus,
-                  dropdownColor: widget.dark
-                      ? const Color(0xFF1E1E1E)
-                      : Colors.white,
-                  decoration: InputDecoration(
-                    labelText: "Initial Status",
-                    labelStyle: TextStyle(
-                      fontFamily: 'Monocraft',
-                      fontSize: 12,
-                      color: widget.dark
-                          ? Colors.white.withAlpha(100)
-                          : Colors.grey,
-                    ),
-                    prefixIcon: const Icon(Icons.flag_outlined, size: 20),
+                TextFormField(
+                  controller: _userIdController,
+                  style: TextStyle(
+                    fontFamily: 'Monocraft',
+                    fontSize: 13,
+                    color: widget.dark ? Colors.white : Colors.black,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: "Customer UUID",
+                    hintText: "c4f52e1d-03d3...",
+                    prefixIcon: Icon(Icons.fingerprint, size: 20),
                     border: InputBorder.none,
                   ),
-                  items: ['pending', 'process']
-                      .map(
-                        (s) => DropdownMenuItem(
-                          value: s,
-                          child: Text(
-                            s.toUpperCase(),
-                            style: TextStyle(
-                              fontFamily: 'Monocraft',
-                              fontSize: 13,
-                              color: widget.dark ? Colors.white : Colors.black,
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() => _selectedStatus = v!),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return "Required";
+                    if (!_isValidUUID(v)) return "Invalid UUID Format";
+                    return null;
+                  },
                 ),
-                const SizedBox(height: 30),
+                const Divider(),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(
+                    Icons.inventory_2_outlined,
+                    color: Color(0xFF5B6EE1),
+                  ),
+                  title: Text(
+                    _selectedProduct?.name ?? "Select Product",
+                    style: TextStyle(
+                      fontFamily: 'Monocraft',
+                      fontSize: 13,
+                      color: widget.dark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  onTap: _showProductPicker,
+                  trailing: const Icon(Icons.chevron_right),
+                ),
+                const Divider(),
+                TextFormField(
+                  controller: _qtyController,
+                  keyboardType: TextInputType.number,
+                  onChanged: (v) => setState(() {}),
+                  style: TextStyle(
+                    fontFamily: 'Monocraft',
+                    fontSize: 13,
+                    color: widget.dark ? Colors.white : Colors.black,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: "Quantity",
+                    prefixIcon: Icon(Icons.shopping_cart_outlined, size: 20),
+                    border: InputBorder.none,
+                  ),
+                  validator: (v) => v == null || v.isEmpty ? "Required" : null,
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5B6EE1).withAlpha(20),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "TOTAL",
+                        style: TextStyle(
+                          fontFamily: 'Monocraft',
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        "Rp ${totalCalc.toInt()}",
+                        style: const TextStyle(
+                          fontFamily: 'Monocraft',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF5B6EE1),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 25),
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -152,56 +241,42 @@ class _OrderFormOverlayState extends State<OrderFormOverlay> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      elevation: 0,
                     ),
-                    onPressed: _isSaving
+                    onPressed: (_isSaving || _selectedProduct == null)
                         ? null
                         : () {
                             if (_formKey.currentState!.validate()) {
-                              final int prodId = int.parse(
-                                _productIdController.text,
-                              );
-                              final int qty = int.parse(_qtyController.text);
-
-                              final product = widget.products
-                                  .cast<Product?>()
-                                  .firstWhere(
-                                    (p) => p?.id == prodId,
-                                    orElse: () => null,
-                                  );
-
-                              if (product == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "PRODUCT ID NOT FOUND",
-                                      style: TextStyle(fontFamily: 'Monocraft'),
-                                    ),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                                return;
-                              }
-
                               setState(() => _isSaving = true);
+
+                              // FIX 1: Format UTC Timezone (Z)
+                              final String isoDate = DateTime.now()
+                                  .toUtc()
+                                  .toIso8601String();
+
+                              // FIX 2: Gunakan 'totalCalc' bukan 'total'
+                              // Convert ke int lalu ke String agar bersih (contoh: "150000")
+                              final String cleanTotal = totalCalc
+                                  .toInt()
+                                  .toString();
+
                               widget.onSave({
-                                "user_id": _userIdController.text,
-                                "product_id": prodId,
-                                "quantity": qty,
-                                "total_amount": product.price * qty,
-                                "status": _selectedStatus,
-                                "order_date": DateTime.now().toIso8601String(),
+                                "user_id": _userIdController.text.trim(),
+                                "product_id": _selectedProduct!.id,
+                                "quantity": int.parse(_qtyController.text),
+                                "total_amount": cleanTotal,
+                                "status": "pending",
+                                "order_date": isoDate,
                               });
                             }
                           },
                     child: _isSaving
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
-                            "SUBMIT ORDER",
+                            "SUBMIT",
                             style: TextStyle(
-                              color: Colors.white,
                               fontFamily: 'Monocraft',
                               fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
                   ),
@@ -209,71 +284,6 @@ class _OrderFormOverlayState extends State<OrderFormOverlay> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildField(
-    TextEditingController ctrl,
-    FocusNode fn,
-    String label,
-    IconData icon, {
-    bool isNum = false,
-  }) {
-    final bool isFocused = fn.hasFocus;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        decoration: BoxDecoration(
-          color: isFocused
-              ? (widget.dark ? const Color(0xFF2C2C2C) : Colors.white)
-              : (widget.dark
-                    ? const Color(0xFF1E1E1E)
-                    : const Color(0xFFEEF2F6)),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isFocused ? const Color(0xFF5B6EE1) : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
-        child: TextFormField(
-          controller: ctrl,
-          focusNode: fn,
-          keyboardType: isNum ? TextInputType.number : TextInputType.text,
-          style: TextStyle(
-            fontFamily: 'Monocraft',
-            fontSize: 13,
-            color: widget.dark ? Colors.white : Colors.black,
-          ),
-          decoration: InputDecoration(
-            labelText: label,
-            labelStyle: TextStyle(
-              fontFamily: 'Monocraft',
-              fontSize: 12,
-              color: isFocused
-                  ? const Color(0xFF5B6EE1)
-                  : (widget.dark
-                        ? Colors.white.withAlpha(100)
-                        : const Color(0xFF9D9D9D)),
-            ),
-            prefixIcon: Icon(
-              icon,
-              color: isFocused
-                  ? const Color(0xFF5B6EE1)
-                  : (widget.dark
-                        ? Colors.white.withAlpha(100)
-                        : const Color(0xFF9D9D9D)),
-              size: 20,
-            ),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-          ),
-          validator: (v) => v == null || v.isEmpty ? "Required" : null,
         ),
       ),
     );

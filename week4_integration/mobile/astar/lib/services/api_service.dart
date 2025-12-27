@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/products.dart';
@@ -43,30 +44,17 @@ class ApiService {
 
   Future<void> createProduct(Map<String, dynamic> data) async {
     final url = Uri.parse('$baseUrl/api/admin/products');
-    final response = await http.post(
-      url,
-      headers: _getHeaders(),
-      body: jsonEncode(data),
-    );
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception("Failed to create");
-    }
+    await http.post(url, headers: _getHeaders(), body: jsonEncode(data));
   }
 
   Future<void> updateProduct(int id, Map<String, dynamic> data) async {
     final url = Uri.parse('$baseUrl/api/admin/products/$id');
-    final response = await http.put(
-      url,
-      headers: _getHeaders(),
-      body: jsonEncode(data),
-    );
-    if (response.statusCode != 200) throw Exception("Failed to update");
+    await http.put(url, headers: _getHeaders(), body: jsonEncode(data));
   }
 
   Future<void> deleteProduct(int id) async {
     final url = Uri.parse('$baseUrl/api/admin/products/$id');
-    final response = await http.delete(url, headers: _getHeaders());
-    if (response.statusCode != 200) throw Exception("Failed to delete");
+    await http.delete(url, headers: _getHeaders());
   }
 
   Future<void> deleteMultipleProducts(List<int> ids) async {
@@ -88,21 +76,29 @@ class ApiService {
 
   Future<void> createOrder(Map<String, dynamic> data) async {
     final url = Uri.parse('$baseUrl/api/admin/orders');
+
+    // DEBUG: Cek apa yang dikirim
+    debugPrint("SENDING PAYLOAD: ${jsonEncode(data)}");
+
     final response = await http.post(
       url,
       headers: _getHeaders(),
       body: jsonEncode(data),
     );
-    if (response.statusCode != 200 && response.statusCode != 201) throw Exception("Failed to create order");
+
+    // DEBUG: Cek apa balasan server
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      debugPrint("SERVER ERROR BODY: ${response.body}");
+      throw Exception("Server Error: ${response.body}");
+    }
   }
 
   Future<void> updateOrderStatus(int id, String status) async {
     final url = Uri.parse('$baseUrl/api/admin/orders/$id/status');
-    final response = await http.put(
+    await http.post(
       url,
       headers: _getHeaders(),
-      body: jsonEncode({"status": status}),
+      body: jsonEncode({"status": status.toLowerCase()}),
     );
-    if (response.statusCode != 200) throw Exception("Failed to update status");
   }
 }
