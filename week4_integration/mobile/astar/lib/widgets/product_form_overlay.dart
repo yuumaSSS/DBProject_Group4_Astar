@@ -252,11 +252,12 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
                                 setState(() => _isUploading = true);
                                 try {
                                   String imageUrl = _currentImageUrl ?? '';
-                                  if (_selectedImage != null)
+                                  if (_selectedImage != null) {
                                     imageUrl = await _apiService.uploadImage(
                                       _selectedImage!,
                                       _nameController.text,
                                     );
+                                  }
                                   widget.onSave({
                                     "name": _nameController.text,
                                     "category": _categoryController.text,
@@ -282,8 +283,9 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
                                     ),
                                   );
                                 } finally {
-                                  if (mounted)
+                                  if (mounted) {
                                     setState(() => _isUploading = false);
+                                  }
                                 }
                               }
                             },

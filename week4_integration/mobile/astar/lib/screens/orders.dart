@@ -80,11 +80,10 @@ class _OrdersScreenState extends State<OrdersScreen>
         products: _allProducts,
         dark: Theme.of(context).brightness == Brightness.dark,
         onSave: (Map<String, dynamic> d) async {
-          Navigator.pop(modalContext); // Tutup modal dulu
+          Navigator.pop(modalContext);
           try {
             await _apiService.createOrder(d);
             _loadData();
-
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -199,6 +198,8 @@ class _OrdersScreenState extends State<OrdersScreen>
   }
 
   Widget _card(Order o, bool d) {
+    final bool isPending = o.status == 'pending';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -207,55 +208,79 @@ class _OrdersScreenState extends State<OrdersScreen>
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center, // Center vertical
         children: [
+          // IMAGE SECTION
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: CachedNetworkImage(
               imageUrl: o.imageUrl,
-              width: 65,
-              height: 65,
+              width: 80, // Sedikit diperbesar
+              height: 80,
               fit: BoxFit.cover,
-              errorWidget: (c, u, e) => const Icon(Icons.broken_image),
+              errorWidget: (c, u, e) => Container(
+                color: Colors.grey.withAlpha(50),
+                child: const Icon(
+                  Icons.broken_image,
+                  size: 30,
+                  color: Colors.grey,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 12),
+
+          // INFO SECTION
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isPending
+                        ? Colors.orange.withAlpha(30)
+                        : Colors.blue.withAlpha(30),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    isPending ? "PENDING" : "ON PROCESS",
+                    style: TextStyle(
+                      color: isPending ? Colors.orange : Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 8,
+                      fontFamily: 'Monocraft',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
                 Text(
-                  "ORDER #${o.id}",
+                  o.productName,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: d ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.bold,
+                    color: d ? Colors.white : Colors.black87,
+                    fontSize: 13,
+                    fontFamily: 'Monocraft',
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  o.customerName,
+                  style: const TextStyle(
+                    color: Colors.grey,
                     fontSize: 10,
                     fontFamily: 'Monocraft',
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  o.productName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: d ? Colors.white70 : Colors.black87,
-                    fontSize: 12,
-                    fontFamily: 'Monocraft',
-                  ),
-                ),
-                Text(
-                  "${o.customerName} • ${o.quantity} pcs",
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 9,
-                    fontFamily: 'Monocraft',
-                  ),
-                ),
-                Text(
-                  NumberFormat.currency(
-                    locale: 'id_ID',
-                    symbol: 'Rp ',
-                    decimalDigits: 0,
-                  ).format(o.totalAmount),
+                  "${o.quantity} pcs • ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(o.totalAmount)}",
                   style: TextStyle(
                     color: d
                         ? const Color(0xFF8B9BFF)
@@ -268,60 +293,98 @@ class _OrdersScreenState extends State<OrdersScreen>
               ],
             ),
           ),
+
+          const SizedBox(width: 8),
+
+          // ACTION BUTTONS SECTION
           Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              GestureDetector(
+              // Main Action Button (Process / Done)
+              _actionButton(
+                d: d,
+                color: isPending
+                    ? Colors.orangeAccent
+                    : const Color(0xFF5B6EE1),
+                icon: isPending
+                    ? Icons.play_arrow_rounded
+                    : Icons.check_rounded,
+                label: isPending ? "PROCESS" : "FINISH",
                 onTap: () {
                   HapticFeedback.mediumImpact();
-                  String n = o.status == 'pending'
-                      ? 'process'
-                      : (o.status == 'process' ? 'done' : '');
-                  if (n.isNotEmpty) {
-                    _apiService
-                        .updateOrderStatus(o.id, n)
-                        .then((_) => _loadData());
-                  }
+                  String nextStatus = isPending ? 'process' : 'done';
+                  _apiService
+                      .updateOrderStatus(o.id, nextStatus)
+                      .then((_) => _loadData());
                 },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        (o.status == 'pending'
-                                ? Colors.orangeAccent
-                                : const Color(0xFF5B6EE1))
-                            .withAlpha(40),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    o.status == 'pending' ? "PROCESS" : "FINISH",
-                    style: TextStyle(
-                      color: o.status == 'pending'
-                          ? Colors.orangeAccent
-                          : const Color(0xFF8B9BFF),
-                      fontSize: 8,
-                      fontFamily: 'Monocraft',
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
               ),
+
               const SizedBox(height: 8),
-              GestureDetector(
-                onTap: () => _apiService
-                    .updateOrderStatus(o.id, 'canceled')
-                    .then((_) => _loadData()),
-                child: Icon(
-                  Icons.cancel_outlined,
-                  color: Colors.redAccent.withAlpha(100),
-                  size: 16,
-                ),
+
+              // Cancel Button
+              _actionButton(
+                d: d,
+                color: Colors.redAccent,
+                icon: Icons.close_rounded,
+                label: "CANCEL",
+                isOutlined: true,
+                onTap: () {
+                  HapticFeedback.heavyImpact();
+                  _apiService
+                      .updateOrderStatus(o.id, 'canceled')
+                      .then((_) => _loadData());
+                },
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  // Helper Widget untuk tombol agar konsisten dan rapi
+  Widget _actionButton({
+    required bool d,
+    required Color color,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool isOutlined = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 85, // Lebar tetap agar tombol sejajar
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: isOutlined
+                ? color.withAlpha(20) // Background tipis untuk Cancel
+                : color, // Background solid untuk Main Action
+            borderRadius: BorderRadius.circular(8),
+            border: isOutlined
+                ? Border.all(color: color.withAlpha(100), width: 1)
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 14, color: isOutlined ? color : Colors.white),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isOutlined ? color : Colors.white,
+                  fontSize: 9,
+                  fontFamily: 'Monocraft',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
