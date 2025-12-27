@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nedpals/supabase-go"
 
 	"backend/pkg/app/admindb"
@@ -17,17 +17,17 @@ import (
 )
 
 type HttpServer struct {
-	DB      *pgxpool.Pool
-	PublicQ *publicdb.Queries
-	AdminQ  *admindb.Queries
+	DB             *pgxpool.Pool
+	PublicQ        *publicdb.Queries
+	AdminQ         *admindb.Queries
 	SupabaseClient *supabase.Client
 }
 
 func NewHttpServer(db *pgxpool.Pool, sb *supabase.Client) *HttpServer {
 	return &HttpServer{
-		DB:      db,
-		PublicQ: publicdb.New(db),
-		AdminQ:  admindb.New(db),
+		DB:             db,
+		PublicQ:        publicdb.New(db),
+		AdminQ:         admindb.New(db),
 		SupabaseClient: sb,
 	}
 }
@@ -40,41 +40,41 @@ func writeJSON(w http.ResponseWriter, data interface{}) {
 // Web
 
 func (h *HttpServer) HandleRegister(w http.ResponseWriter, r *http.Request) {
-    var req struct {
-        Email       string `json:"email"`
-        Password    string `json:"password"`
-        Username    string `json:"username"`
-        FullName    string `json:"full_name"`
-        PhoneNumber string `json:"phone_number"`
-        Street      string `json:"street"`
-        City        string `json:"city"`
-        PostCode    string `json:"post_code"`
-    }
+	var req struct {
+		Email       string `json:"email"`
+		Password    string `json:"password"`
+		Username    string `json:"username"`
+		FullName    string `json:"full_name"`
+		PhoneNumber string `json:"phone_number"`
+		Street      string `json:"street"`
+		City        string `json:"city"`
+		PostCode    string `json:"post_code"`
+	}
 
-    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-        http.Error(w, "Invalid input", 400)
-        return
-    }
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid input", 400)
+		return
+	}
 
-    _, err := h.SupabaseClient.Auth.SignUp(r.Context(), supabase.UserCredentials{
-        Email:    req.Email,
-        Password: req.Password,
-        Data: map[string]interface{}{
-            "username":     req.Username,
-            "full_name":    req.FullName,
-            "phone_number": req.PhoneNumber,
-            "street":       req.Street,
-            "city":         req.City,
-            "post_code":    req.PostCode,
-        },
-    })
+	_, err := h.SupabaseClient.Auth.SignUp(r.Context(), supabase.UserCredentials{
+		Email:    req.Email,
+		Password: req.Password,
+		Data: map[string]interface{}{
+			"username":     req.Username,
+			"full_name":    req.FullName,
+			"phone_number": req.PhoneNumber,
+			"street":       req.Street,
+			"city":         req.City,
+			"post_code":    req.PostCode,
+		},
+	})
 
-    if err != nil {
-        http.Error(w, "Gagal mendaftar: "+err.Error(), 500)
-        return
-    }
+	if err != nil {
+		http.Error(w, "Gagal mendaftar: "+err.Error(), 500)
+		return
+	}
 
-    writeJSON(w, map[string]string{"message": "Registrasi berhasil"})
+	writeJSON(w, map[string]string{"message": "Registrasi berhasil"})
 }
 
 func (h *HttpServer) HandleListPublicProducts(w http.ResponseWriter, r *http.Request) {
@@ -193,7 +193,6 @@ func (h *HttpServer) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 		Quantity    int32   `json:"quantity"`
 		TotalAmount float64 `json:"total_amount"`
 		Status      string  `json:"status"`
-		OrderDate   string  `json:"order_date"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -213,23 +212,16 @@ func (h *HttpServer) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var orderTimestamp pgtype.Timestamp
-	if err := orderTimestamp.Scan(req.OrderDate); err != nil {
-		http.Error(w, "Invalid Date format", 400)
-		return
-	}
-
 	err := h.AdminQ.CreateOrder(r.Context(), admindb.CreateOrderParams{
 		UserID:      userUUID,
 		ProductID:   req.ProductID,
 		Quantity:    req.Quantity,
 		TotalAmount: totalAmountNum,
 		Status:      req.Status,
-		OrderDate:   orderTimestamp,
 	})
 
 	if err != nil {
-		fmt.Println("DB ERROR:", err) 
+		fmt.Println("DB ERROR:", err)
 		http.Error(w, "Database Error: "+err.Error(), 500)
 		return
 	}

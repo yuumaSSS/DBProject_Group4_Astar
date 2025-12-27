@@ -17,20 +17,18 @@ INSERT INTO orders (
     product_id,
     quantity,
     total_amount,
-    status,
-    order_date
+    status
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5
 )
 `
 
 type CreateOrderParams struct {
-	UserID      pgtype.UUID      `json:"user_id"`
-	ProductID   int32            `json:"product_id"`
-	Quantity    int32            `json:"quantity"`
-	TotalAmount pgtype.Numeric   `json:"total_amount"`
-	Status      string           `json:"status"`
-	OrderDate   pgtype.Timestamp `json:"order_date"`
+	UserID      pgtype.UUID    `json:"user_id"`
+	ProductID   int32          `json:"product_id"`
+	Quantity    int32          `json:"quantity"`
+	TotalAmount pgtype.Numeric `json:"total_amount"`
+	Status      string         `json:"status"`
 }
 
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) error {
@@ -40,7 +38,6 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) error 
 		arg.Quantity,
 		arg.TotalAmount,
 		arg.Status,
-		arg.OrderDate,
 	)
 	return err
 }

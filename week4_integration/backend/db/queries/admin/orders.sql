@@ -20,10 +20,9 @@ INSERT INTO orders (
     product_id,
     quantity,
     total_amount,
-    status,
-    order_date
+    status
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5
 );
 
 -- name: UpdateOrderStatus :exec
