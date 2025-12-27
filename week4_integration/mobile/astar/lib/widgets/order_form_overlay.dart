@@ -104,7 +104,7 @@ class _OrderFormOverlayState extends State<OrderFormOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Variabel ini bernama 'totalCalc'
+    // Hitung total untuk display (tetap double biar akurat)
     final double totalCalc =
         (_selectedProduct?.price ?? 0) *
         (int.tryParse(_qtyController.text) ?? 0);
@@ -248,16 +248,11 @@ class _OrderFormOverlayState extends State<OrderFormOverlay> {
                             if (_formKey.currentState!.validate()) {
                               setState(() => _isSaving = true);
 
-                              // FIX 1: Format UTC Timezone (Z)
                               final String isoDate = DateTime.now()
                                   .toUtc()
                                   .toIso8601String();
 
-                              // FIX 2: Gunakan 'totalCalc' bukan 'total'
-                              // Convert ke int lalu ke String agar bersih (contoh: "150000")
-                              final String cleanTotal = totalCalc
-                                  .toInt()
-                                  .toString();
+                              final int cleanTotal = totalCalc.toInt();
 
                               widget.onSave({
                                 "user_id": _userIdController.text.trim(),
