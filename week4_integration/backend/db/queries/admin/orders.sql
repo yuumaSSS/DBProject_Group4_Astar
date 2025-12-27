@@ -14,6 +14,18 @@ JOIN users u ON o.user_id = u.user_id
 JOIN products p ON o.product_id = p.product_id
 ORDER BY o.order_date ASC;
 
+-- name: CreateOrder :exec
+INSERT INTO orders (
+    user_id,
+    product_id,
+    quantity,
+    total_amount,
+    status,
+    order_date
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+);
+
 -- name: UpdateOrderStatus :exec
 UPDATE orders 
 SET status = $2 

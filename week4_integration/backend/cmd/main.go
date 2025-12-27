@@ -50,6 +50,7 @@ func main() {
 		r.Delete("/products/{id}", h.HandleDeleteProduct)
 
 		r.Get("/orders", h.HandleListOrders)
+		r.Post("/orders", h.HandleCreateOrder)
 		r.Post("/orders/{id}/status", h.HandleUpdateOrderStatus)
 	})
 

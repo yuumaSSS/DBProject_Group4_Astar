@@ -186,6 +186,57 @@ func (h *HttpServer) HandleUpdateProduct(w http.ResponseWriter, r *http.Request)
 	writeJSON(w, map[string]string{"status": "success"})
 }
 
+func (h *HttpServer) HandleCreateOrder(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		UserID      string  `json:"user_id"`
+		ProductID   int32   `json:"product_id"`
+		Quantity    int32   `json:"quantity"`
+		TotalAmount float64 `json:"total_amount"`
+		Status      string  `json:"status"`
+		OrderDate   string  `json:"order_date"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid Input Format: "+err.Error(), 400)
+		return
+	}
+
+	var userUUID pgtype.UUID
+	if err := userUUID.Scan(req.UserID); err != nil {
+		http.Error(w, "Invalid UUID format", 400)
+		return
+	}
+
+	var totalAmountNum pgtype.Numeric
+	if err := totalAmountNum.Scan(fmt.Sprintf("%.2f", req.TotalAmount)); err != nil {
+		http.Error(w, "Invalid Total Amount", 400)
+		return
+	}
+
+	var orderTimestamp pgtype.Timestamp
+	if err := orderTimestamp.Scan(req.OrderDate); err != nil {
+		http.Error(w, "Invalid Date format", 400)
+		return
+	}
+
+	err := h.AdminQ.CreateOrder(r.Context(), admindb.CreateOrderParams{
+		UserID:      userUUID,
+		ProductID:   req.ProductID,
+		Quantity:    req.Quantity,
+		TotalAmount: totalAmountNum,
+		Status:      req.Status,
+		OrderDate:   orderTimestamp,
+	})
+
+	if err != nil {
+		fmt.Println("DB ERROR:", err) 
+		http.Error(w, "Database Error: "+err.Error(), 500)
+		return
+	}
+
+	writeJSON(w, map[string]string{"message": "Order Created Successfully"})
+}
+
 func (h *HttpServer) HandleDeleteProduct(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, _ := strconv.Atoi(idStr)

@@ -11,6 +11,40 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createOrder = `-- name: CreateOrder :exec
+INSERT INTO orders (
+    user_id,
+    product_id,
+    quantity,
+    total_amount,
+    status,
+    order_date
+) VALUES (
+    $1, $2, $3, $4, $5, $6
+)
+`
+
+type CreateOrderParams struct {
+	UserID      pgtype.UUID      `json:"user_id"`
+	ProductID   int32            `json:"product_id"`
+	Quantity    int32            `json:"quantity"`
+	TotalAmount pgtype.Numeric   `json:"total_amount"`
+	Status      string           `json:"status"`
+	OrderDate   pgtype.Timestamp `json:"order_date"`
+}
+
+func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) error {
+	_, err := q.db.Exec(ctx, createOrder,
+		arg.UserID,
+		arg.ProductID,
+		arg.Quantity,
+		arg.TotalAmount,
+		arg.Status,
+		arg.OrderDate,
+	)
+	return err
+}
+
 const decreaseProductStock = `-- name: DecreaseProductStock :exec
 UPDATE products 
 SET stock = stock - $2 
