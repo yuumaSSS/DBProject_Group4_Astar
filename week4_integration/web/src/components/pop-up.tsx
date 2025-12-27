@@ -45,6 +45,9 @@ const PopUp = ({ product, onClose }: PopUpProps) => {
       if (profile) {
         addressInfo = `
 *--- DATA PENGIRIMAN ---*
+*User ID :*
+${user.id}
+
 *Nama:* ${profile.full_name}
 *No. HP:* ${profile.phone_number}
 *Alamat:* ${profile.street}
