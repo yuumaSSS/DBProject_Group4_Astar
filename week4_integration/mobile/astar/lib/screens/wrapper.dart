@@ -17,7 +17,6 @@ class MainWrapper extends StatefulWidget {
 }
 
 class _MainWrapperState extends State<MainWrapper> {
-
   @override
   void initState() {
     super.initState();
@@ -32,8 +31,10 @@ class _MainWrapperState extends State<MainWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? Color(0xFF0F111A) : Colors.white,
       body: SafeArea(
         top: true,
         bottom: false,
@@ -44,13 +45,10 @@ class _MainWrapperState extends State<MainWrapper> {
           transitionBuilder: (Widget child, Animation<double> animation) {
             return SlideTransition(
               position: Tween<Offset>(
-                begin: const Offset(0.0, 0.1), 
+                begin: const Offset(0.0, 0.1),
                 end: Offset.zero,
               ).animate(animation),
-              child: FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
+              child: FadeTransition(opacity: animation, child: child),
             );
           },
           child: KeyedSubtree(
@@ -60,7 +58,7 @@ class _MainWrapperState extends State<MainWrapper> {
         ),
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(color: Colors.black),
+        decoration: BoxDecoration(color: Colors.black),
         child: SafeArea(
           top: false,
           bottom: true,
@@ -71,9 +69,9 @@ class _MainWrapperState extends State<MainWrapper> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 BottomNav(
-                  label: "Stock",
-                  imgPath: "assets/images/icons/stock.png",
-                  activeImgPath: "assets/images/icons/stock_c.png",
+                  label: "Manage",
+                  imgPath: "assets/images/icons/orders.png",
+                  activeImgPath: "assets/images/icons/orders_c.png",
                   isSelected: widget.navigationShell.currentIndex == 0,
                   onTap: () {
                     _goBranch(0);

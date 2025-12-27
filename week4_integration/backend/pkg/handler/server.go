@@ -198,8 +198,8 @@ func (h *HttpServer) HandleDeleteProduct(w http.ResponseWriter, r *http.Request)
 	writeJSON(w, map[string]string{"status": "deleted"})
 }
 
-func (h *HttpServer) HandleListPendingOrders(w http.ResponseWriter, r *http.Request) {
-	orders, err := h.AdminQ.ListPendingOrders(r.Context())
+func (h *HttpServer) HandleListOrders(w http.ResponseWriter, r *http.Request) {
+	orders, err := h.AdminQ.ListOrders(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
