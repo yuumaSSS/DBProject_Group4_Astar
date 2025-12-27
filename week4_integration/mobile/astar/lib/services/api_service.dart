@@ -86,6 +86,16 @@ class ApiService {
     }
   }
 
+  Future<void> createOrder(Map<String, dynamic> data) async {
+    final url = Uri.parse('$baseUrl/api/admin/orders');
+    final response = await http.post(
+      url,
+      headers: _getHeaders(),
+      body: jsonEncode(data),
+    );
+    if (response.statusCode != 200 && response.statusCode != 201) throw Exception("Failed to create order");
+  }
+
   Future<void> updateOrderStatus(int id, String status) async {
     final url = Uri.parse('$baseUrl/api/admin/orders/$id/status');
     final response = await http.put(
