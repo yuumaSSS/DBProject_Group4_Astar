@@ -47,7 +47,7 @@ func (q *Queries) GetOrderQuantityAndProduct(ctx context.Context, orderID int32)
 	return i, err
 }
 
-const listPendingOrders = `-- name: ListPendingOrders :many
+const listOrders = `-- name: ListOrders :many
 SELECT 
     o.order_id,
     o.order_date,
@@ -61,11 +61,10 @@ SELECT
 FROM orders o
 JOIN users u ON o.user_id = u.user_id
 JOIN products p ON o.product_id = p.product_id
-WHERE o.status = 'pending'
 ORDER BY o.order_date ASC
 `
 
-type ListPendingOrdersRow struct {
+type ListOrdersRow struct {
 	OrderID      int32            `json:"order_id"`
 	OrderDate    pgtype.Timestamp `json:"order_date"`
 	TotalAmount  pgtype.Numeric   `json:"total_amount"`
@@ -77,15 +76,15 @@ type ListPendingOrdersRow struct {
 	ImageUrl     string           `json:"image_url"`
 }
 
-func (q *Queries) ListPendingOrders(ctx context.Context) ([]ListPendingOrdersRow, error) {
-	rows, err := q.db.Query(ctx, listPendingOrders)
+func (q *Queries) ListOrders(ctx context.Context) ([]ListOrdersRow, error) {
+	rows, err := q.db.Query(ctx, listOrders)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListPendingOrdersRow
+	var items []ListOrdersRow
 	for rows.Next() {
-		var i ListPendingOrdersRow
+		var i ListOrdersRow
 		if err := rows.Scan(
 			&i.OrderID,
 			&i.OrderDate,

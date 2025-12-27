@@ -57,7 +57,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		ar.Put("/products/{id}", h.HandleUpdateProduct)
 		ar.Delete("/products/{id}", h.HandleDeleteProduct)
 		
-		ar.Get("/orders/pending", h.HandleListPendingOrders)
+		ar.Get("/orders", h.HandleListOrders)
 		ar.Post("/orders/{id}/status", h.HandleUpdateOrderStatus)
 	})
 
