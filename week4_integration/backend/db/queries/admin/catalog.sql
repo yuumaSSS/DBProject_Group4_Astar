@@ -4,7 +4,8 @@ SELECT
     image_url, 
     product_id, 
     product_name, 
-    category, 
+    category,
+    description,
     unit_price, 
     stock
 FROM products

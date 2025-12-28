@@ -65,7 +65,8 @@ SELECT
     image_url, 
     product_id, 
     product_name, 
-    category, 
+    category,
+    description,
     unit_price, 
     stock
 FROM products
@@ -77,6 +78,7 @@ type ListAllProductsAdminRow struct {
 	ProductID   int32          `json:"product_id"`
 	ProductName string         `json:"product_name"`
 	Category    string         `json:"category"`
+	Description string         `json:"description"`
 	UnitPrice   pgtype.Numeric `json:"unit_price"`
 	Stock       int32          `json:"stock"`
 }
@@ -96,6 +98,7 @@ func (q *Queries) ListAllProductsAdmin(ctx context.Context) ([]ListAllProductsAd
 			&i.ProductID,
 			&i.ProductName,
 			&i.Category,
+			&i.Description,
 			&i.UnitPrice,
 			&i.Stock,
 		); err != nil {
