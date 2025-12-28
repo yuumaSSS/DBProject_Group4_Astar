@@ -30,3 +30,7 @@ Simbol asterisk `*` juga merepresentasikan keragaman dan inklusivitas, di mana s
 - Menerapkan prinsip **learning by doing** dalam seluruh tahapan pengembangan.  
 
 ---
+
+## Video Demo
+- [AStar Admin Demo Video](https://drive.google.com/file/d/11sw25kGs0JlAD8z8nBJ7Vkzk_gQ7HFxI/view?usp=sharing)
+  *note: Wajib menggunakan email UGM
