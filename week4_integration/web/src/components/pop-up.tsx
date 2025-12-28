@@ -132,7 +132,7 @@ Mohon pesanan saya diproses ya, terima kasih!`;
               className="w-8 h-8 md:w-10 md:h-10 object-cover rounded"
             />
             <Image
-              src="/faris_1.webp"
+              src="/faris_4.webp"
               alt="Faris"
               width={50}
               height={50}
