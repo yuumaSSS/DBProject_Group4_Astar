@@ -27,11 +27,13 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
   final ApiService _apiService = ApiService();
   late TextEditingController _nameController;
   late TextEditingController _categoryController;
+  late TextEditingController _descController;
   late TextEditingController _priceController;
   late TextEditingController _stockController;
   final Map<String, FocusNode> _focusNodes = {
     'name': FocusNode(),
     'category': FocusNode(),
+    'desc': FocusNode(),
     'price': FocusNode(),
     'stock': FocusNode(),
   };
@@ -45,6 +47,9 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
     _nameController = TextEditingController(text: widget.product?.name ?? '');
     _categoryController = TextEditingController(
       text: widget.product?.category ?? '',
+    );
+    _descController = TextEditingController(
+      text: widget.product?.description ?? '',
     );
     _priceController = TextEditingController(
       text: widget.product?.price.toString() ?? '',
@@ -60,6 +65,7 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
   void dispose() {
     _nameController.dispose();
     _categoryController.dispose();
+    _descController.dispose();
     _priceController.dispose();
     _stockController.dispose();
     _focusNodes.forEach((key, node) => node.dispose());
@@ -219,6 +225,13 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
                     Icons.category_outlined,
                   ),
                   _buildAnimatedField(
+                    _descController,
+                    _focusNodes['desc']!,
+                    "Description",
+                    Icons.description_outlined,
+                    maxLines: 3,
+                  ),
+                  _buildAnimatedField(
                     _priceController,
                     _focusNodes['price']!,
                     "Price",
@@ -252,15 +265,16 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
                                 setState(() => _isUploading = true);
                                 try {
                                   String imageUrl = _currentImageUrl ?? '';
-                                  if (_selectedImage != null)
+                                  if (_selectedImage != null) {
                                     imageUrl = await _apiService.uploadImage(
                                       _selectedImage!,
                                       _nameController.text,
                                     );
+                                  }
                                   widget.onSave({
                                     "name": _nameController.text,
                                     "category": _categoryController.text,
-                                    "description": "Admin entry",
+                                    "description": _descController.text,
                                     "price": double.parse(
                                       _priceController.text,
                                     ),
@@ -282,8 +296,9 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
                                     ),
                                   );
                                 } finally {
-                                  if (mounted)
+                                  if (mounted) {
                                     setState(() => _isUploading = false);
+                                  }
                                 }
                               }
                             },
@@ -314,6 +329,7 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
     String label,
     IconData icon, {
     bool isNumber = false,
+    int maxLines = 1,
   }) {
     final bool isFocused = focusNode.hasFocus;
     return Padding(
@@ -342,9 +358,13 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
               : [],
         ),
         child: TextFormField(
+          cursorColor: const Color(0xFF5B6EE1),
           controller: controller,
           focusNode: focusNode,
-          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+          maxLines: maxLines,
+          keyboardType: isNumber
+              ? TextInputType.number
+              : (maxLines > 1 ? TextInputType.multiline : TextInputType.text),
           style: TextStyle(
             fontFamily: 'Monocraft',
             fontSize: 13,
@@ -352,6 +372,7 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
           ),
           decoration: InputDecoration(
             labelText: label,
+            alignLabelWithHint: maxLines > 1,
             labelStyle: TextStyle(
               fontFamily: 'Monocraft',
               fontSize: 12,
@@ -361,14 +382,19 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
                         ? Colors.white.withAlpha(100)
                         : const Color(0xFF9D9D9D)),
             ),
-            prefixIcon: Icon(
-              icon,
-              color: isFocused
-                  ? const Color(0xFF5B6EE1)
-                  : (widget.dark
-                        ? Colors.white.withAlpha(100)
-                        : const Color(0xFF9D9D9D)),
-              size: 20,
+            prefixIcon: Padding(
+              padding: EdgeInsets.only(
+                bottom: maxLines > 1 ? (maxLines * 8.0) : 0,
+              ),
+              child: Icon(
+                icon,
+                color: isFocused
+                    ? const Color(0xFF5B6EE1)
+                    : (widget.dark
+                          ? Colors.white.withAlpha(100)
+                          : const Color(0xFF9D9D9D)),
+                size: 20,
+              ),
             ),
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(

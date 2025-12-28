@@ -69,7 +69,7 @@ class _MainWrapperState extends State<MainWrapper> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 BottomNav(
-                  label: "Manage",
+                  label: "Orders",
                   imgPath: "assets/images/icons/orders.png",
                   activeImgPath: "assets/images/icons/orders_c.png",
                   isSelected: widget.navigationShell.currentIndex == 0,

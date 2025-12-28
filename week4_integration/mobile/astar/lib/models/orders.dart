@@ -25,13 +25,13 @@ class Order {
     return Order(
       id: json['order_id'],
       orderDate: DateTime.parse(json['order_date']),
-      totalAmount: double.parse(json['total_amount'].toString()),
+      totalAmount: double.tryParse(json['total_amount'].toString()) ?? 0.0,
       quantity: json['quantity'],
       status: json['status'],
-      customerName: json['customer_name'],
-      phoneNumber: json['phone_number'],
-      productName: json['product_name'],
-      imageUrl: json['image_url'],
+      customerName: json['customer_name'] ?? 'N/A',
+      phoneNumber: json['phone_number'] ?? 'N/A',
+      productName: json['product_name'] ?? 'Unknown',
+      imageUrl: json['image_url'] ?? '',
     );
   }
 }
