@@ -5,11 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../models/orders.dart';
+import '../models/products.dart';
 import '../widgets/header.dart';
+import '../widgets/order_form_overlay.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
-
   @override
   State<OrdersScreen> createState() => _OrdersScreenState();
 }
@@ -17,14 +18,12 @@ class OrdersScreen extends StatefulWidget {
 class _OrdersScreenState extends State<OrdersScreen>
     with AutomaticKeepAliveClientMixin {
   final ApiService _apiService = ApiService();
-  late ScrollController _scrollController;
-  final TextEditingController _searchController = TextEditingController();
-  final FocusNode _searchFocusNode = FocusNode();
-
   List<Order> _allOrders = [];
-  List<Order> _filteredOrders = [];
+  List<Product> _allProducts = [];
+  List<Order> _displayOrders = [];
+  int _doneCount = 0;
+  int _canceledCount = 0;
   bool _isLoading = false;
-  bool _isSearchFocused = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -32,407 +31,355 @@ class _OrdersScreenState extends State<OrdersScreen>
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
-    _searchFocusNode.addListener(() {
-      if (mounted) setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
-    });
     _loadData();
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    _searchController.dispose();
-    _searchFocusNode.dispose();
-    super.dispose();
-  }
-
-  String _sanitizeError(String error) {
-    final lower = error.toLowerCase();
-    if (lower.contains("http") ||
-        lower.contains("vercel") ||
-        lower.contains("supabase") ||
-        lower.contains("socket")) {
-      return "NETWORK ERROR: DATABASE CONNECTION FAILED";
+  String _sanitize(String e) {
+    final l = e.toLowerCase();
+    if (l.contains("http") || l.contains("vercel") || l.contains("socket")) {
+      return "CONNECTION ERROR";
     }
-    return error;
+    if (l.contains("foreign key")) return "USER ID NOT FOUND";
+    if (l.contains("uuid")) return "INVALID UUID FORMAT";
+    return e.replaceAll("Exception:", "").trim();
   }
 
   Future<void> _loadData() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
     try {
-      final orders = await _apiService.fetchOrders();
-      if (!mounted) return;
-      setState(() {
-        _allOrders = orders;
-        _filterOrders(_searchController.text);
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _sanitizeError(e.toString()).toUpperCase(),
-            style: const TextStyle(fontFamily: 'Monocraft'),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+      final pData = await _apiService.fetchProducts();
+      if (mounted) setState(() => _allProducts = pData);
 
-  void _filterOrders(String query) {
-    if (!mounted) return;
-    setState(() {
-      if (query.isEmpty) {
-        _filteredOrders = List.from(_allOrders);
-      } else {
-        _filteredOrders = _allOrders
-            .where(
-              (o) =>
-                  o.id.toString().contains(query) ||
-                  o.productName.toLowerCase().contains(query.toLowerCase()) ||
-                  o.customerName.toLowerCase().contains(query.toLowerCase()),
-            )
-            .toList();
-      }
-    });
-  }
-
-  Future<void> _updateStatus(int id, String newStatus) async {
-    HapticFeedback.mediumImpact();
-    try {
-      await _apiService.updateOrderStatus(id, newStatus);
-      _loadData();
-    } catch (e) {
+      final oData = await _apiService.fetchOrders();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _sanitizeError(e.toString()).toUpperCase(),
-              style: const TextStyle(fontFamily: 'Monocraft'),
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _allOrders = oData;
+          _displayOrders = _allOrders
+              .where((o) => o.status == 'pending' || o.status == 'process')
+              .toList();
+          _doneCount = _allOrders.where((o) => o.status == 'done').length;
+          _canceledCount = _allOrders
+              .where((o) => o.status == 'canceled')
+              .length;
+        });
       }
+    } catch (e) {
+      debugPrint("ERR: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showStatusPicker(Order order) {
-    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final List<String> statuses = ['pending', 'process', 'done', 'canceled'];
-
+  void _openForm() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: isDarkMode ? const Color(0xFF1A1C26) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.withAlpha(50),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "UPDATE STATUS",
-              style: TextStyle(
-                fontFamily: 'Monocraft',
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Color(0xFF5B6EE1),
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...statuses.map(
-              (status) => ListTile(
-                onTap: () {
-                  Navigator.pop(context);
-                  _updateStatus(order.id, status);
-                },
-                title: Text(
-                  status.toUpperCase(),
-                  style: const TextStyle(fontFamily: 'Monocraft', fontSize: 13),
+      builder: (modalContext) => OrderFormOverlay(
+        products: _allProducts,
+        dark: Theme.of(context).brightness == Brightness.dark,
+        onSave: (Map<String, dynamic> d) async {
+          Navigator.pop(modalContext);
+          try {
+            await _apiService.createOrder(d);
+            _loadData();
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "ORDER CREATED",
+                    style: TextStyle(fontFamily: 'Monocraft'),
+                  ),
+                  backgroundColor: Colors.green,
                 ),
-                trailing: order.status.toLowerCase() == status
-                    ? const Icon(Icons.check_circle, color: Color(0xFF5B6EE1))
-                    : null,
-              ),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    _sanitize(e.toString()).toUpperCase(),
+                    style: const TextStyle(fontFamily: 'Monocraft'),
+                  ),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool dark = Theme.of(context).brightness == Brightness.dark;
+    super.build(context);
+    return Scaffold(
+      backgroundColor: dark ? const Color(0xFF0F111A) : Colors.white,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF5B6EE1),
+        onPressed: _openForm,
+        child: const Icon(Icons.add_shopping_cart, color: Colors.white),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        child: Column(
+          children: [
+            Header(title: 'Orders', dark: dark),
+            _buildSummary(dark),
+            Expanded(
+              child: _isLoading && _displayOrders.isEmpty
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF5B6EE1),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: _displayOrders.length,
+                      itemBuilder: (context, i) =>
+                          _card(_displayOrders[i], dark),
+                    ),
             ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
-  String formatRupiah(double price) {
-    return NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    ).format(price);
+  Widget _buildSummary(bool d) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          _badge("DONE", _doneCount, Colors.greenAccent, d),
+          const SizedBox(width: 10),
+          _badge("CANCELED", _canceledCount, Colors.redAccent, d),
+        ],
+      ),
+    );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'done':
-        return Colors.greenAccent;
-      case 'process':
-        return const Color(0xFF8B9BFF);
-      case 'pending':
-        return Colors.orangeAccent;
-      case 'canceled':
-        return Colors.redAccent;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final Color bgColor = isDarkMode ? const Color(0xFF0F111A) : Colors.white;
-    final Color surfaceColor = isDarkMode
-        ? Colors.white.withAlpha(15)
-        : const Color(0xFFEEF2F6);
-    super.build(context);
-
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        backgroundColor: bgColor,
-        body: RefreshIndicator(
-          color: const Color(0xFF5B6EE1),
-          onRefresh: _loadData,
-          child: Column(
-            children: [
-              Header(title: 'Orders', dark: isDarkMode),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 12.0,
-                ),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  decoration: BoxDecoration(
-                    color: _isSearchFocused
-                        ? (isDarkMode
-                              ? Colors.white.withAlpha(30)
-                              : Colors.white)
-                        : surfaceColor,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: _isSearchFocused
-                          ? const Color(0xFF5B6EE1)
-                          : Colors.white.withAlpha(isDarkMode ? 20 : 0),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    onChanged: _filterOrders,
-                    cursorColor: const Color(0xFF5B6EE1),
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
-                      fontFamily: 'Monocraft',
-                      fontSize: 13,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Search Order, Product, or User',
-                      hintStyle: TextStyle(
-                        fontFamily: 'Monocraft',
-                        fontSize: 12,
-                        color: isDarkMode
-                            ? Colors.white38
-                            : const Color(0xFF9D9D9D),
-                      ),
-                      prefixIcon: Icon(
-                        Icons.receipt_long_rounded,
-                        color: _isSearchFocused
-                            ? const Color(0xFF5B6EE1)
-                            : (isDarkMode ? Colors.white38 : Colors.grey),
-                      ),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(
-                                Icons.close_rounded,
-                                size: 18,
-                                color: Colors.grey,
-                              ),
-                              onPressed: () {
-                                _searchController.clear();
-                                _filterOrders('');
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
+  Widget _badge(String l, int c, Color clr, bool d) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: d ? Colors.white.withAlpha(10) : const Color(0xFFEEF2F6),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l,
+              style: const TextStyle(
+                fontFamily: 'Monocraft',
+                fontSize: 9,
+                color: Colors.grey,
               ),
-              Expanded(
-                child: _isLoading && _filteredOrders.isEmpty
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF5B6EE1),
-                        ),
-                      )
-                    : _filteredOrders.isEmpty
-                    ? Center(
-                        child: Text(
-                          "No orders found",
-                          style: TextStyle(
-                            fontFamily: 'Monocraft',
-                            color: isDarkMode
-                                ? Colors.white24
-                                : const Color(0xFF9D9D9D),
-                          ),
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        controller: _scrollController,
-                        itemCount: _filteredOrders.length,
-                        itemBuilder: (context, index) =>
-                            _buildOrderCard(_filteredOrders[index]),
-                      ),
+            ),
+            Text(
+              c.toString(),
+              style: TextStyle(
+                fontFamily: 'Monocraft',
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: clr,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildOrderCard(Order order) {
-    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: () => _showStatusPicker(order),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: isDarkMode
-              ? Colors.white.withAlpha(12)
-              : const Color(0xFFEEF2F6),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isDarkMode ? Colors.white.withAlpha(20) : Colors.transparent,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: order.imageUrl,
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) =>
-                      Container(color: Colors.white.withAlpha(10)),
-                  errorWidget: (context, url, error) =>
-                      const Icon(Icons.image_not_supported, color: Colors.grey),
+  Widget _card(Order o, bool d) {
+    final bool isPending = o.status == 'pending';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: d ? Colors.white.withAlpha(12) : const Color(0xFFEEF2F6),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center, // Center vertical
+        children: [
+          // IMAGE SECTION
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: CachedNetworkImage(
+              imageUrl: o.imageUrl,
+              width: 80, // Sedikit diperbesar
+              height: 80,
+              fit: BoxFit.cover,
+              errorWidget: (c, u, e) => Container(
+                color: Colors.grey.withAlpha(50),
+                child: const Icon(
+                  Icons.broken_image,
+                  size: 30,
+                  color: Colors.grey,
                 ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "ORDER #${order.id}",
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            fontFamily: 'Monocraft',
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(order.status).withAlpha(40),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            order.status.toUpperCase(),
-                            style: TextStyle(
-                              color: _getStatusColor(order.status),
-                              fontSize: 9,
-                              fontFamily: 'Monocraft',
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // INFO SECTION
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isPending
+                        ? Colors.orange.withAlpha(30)
+                        : Colors.blue.withAlpha(30),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    isPending ? "PENDING" : "ON PROCESS",
+                    style: TextStyle(
+                      color: isPending ? Colors.orange : Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 8,
+                      fontFamily: 'Monocraft',
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      order.productName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black87,
-                        fontSize: 13,
-                        fontFamily: 'Monocraft',
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "${order.customerName} • ${order.phoneNumber}",
-                      style: TextStyle(
-                        color: const Color(0xFF5B6EE1).withAlpha(180),
-                        fontSize: 10,
-                        fontFamily: 'Monocraft',
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "${order.quantity} Items • ${DateFormat('dd MMM yyyy').format(order.orderDate)}",
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 10,
-                        fontFamily: 'Monocraft',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      formatRupiah(order.totalAmount),
-                      style: TextStyle(
-                        color: isDarkMode
-                            ? const Color(0xFF8B9BFF)
-                            : const Color(0xFF5B6EE1),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        fontFamily: 'Monocraft',
-                      ),
-                    ),
-                  ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  o.productName,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: d ? Colors.white : Colors.black87,
+                    fontSize: 13,
+                    fontFamily: 'Monocraft',
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  o.customerName,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 10,
+                    fontFamily: 'Monocraft',
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "${o.quantity} pcs • ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(o.totalAmount)}",
+                  style: TextStyle(
+                    color: d
+                        ? const Color(0xFF8B9BFF)
+                        : const Color(0xFF5B6EE1),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                    fontFamily: 'Monocraft',
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // ACTION BUTTONS SECTION
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Main Action Button (Process / Done)
+              _actionButton(
+                d: d,
+                color: isPending
+                    ? Colors.orangeAccent
+                    : const Color(0xFF5B6EE1),
+                icon: isPending
+                    ? Icons.play_arrow_rounded
+                    : Icons.check_rounded,
+                label: isPending ? "PROCESS" : "FINISH",
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  String nextStatus = isPending ? 'process' : 'done';
+                  _apiService
+                      .updateOrderStatus(o.id, nextStatus)
+                      .then((_) => _loadData());
+                },
+              ),
+
+              const SizedBox(height: 8),
+
+              // Cancel Button
+              _actionButton(
+                d: d,
+                color: Colors.redAccent,
+                icon: Icons.close_rounded,
+                label: "CANCEL",
+                isOutlined: true,
+                onTap: () {
+                  HapticFeedback.heavyImpact();
+                  _apiService
+                      .updateOrderStatus(o.id, 'canceled')
+                      .then((_) => _loadData());
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper Widget untuk tombol agar konsisten dan rapi
+  Widget _actionButton({
+    required bool d,
+    required Color color,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool isOutlined = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 85, // Lebar tetap agar tombol sejajar
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: isOutlined
+                ? color.withAlpha(20) // Background tipis untuk Cancel
+                : color, // Background solid untuk Main Action
+            borderRadius: BorderRadius.circular(8),
+            border: isOutlined
+                ? Border.all(color: color.withAlpha(100), width: 1)
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 14, color: isOutlined ? color : Colors.white),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isOutlined ? color : Colors.white,
+                  fontSize: 9,
+                  fontFamily: 'Monocraft',
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
