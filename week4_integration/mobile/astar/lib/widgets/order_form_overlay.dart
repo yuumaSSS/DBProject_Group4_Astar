@@ -374,6 +374,7 @@ class _OrderFormOverlayState extends State<OrderFormOverlay> {
               : [],
         ),
         child: TextFormField(
+          cursorColor: const Color(0xFF5B6EE1),
           controller: controller,
           focusNode: focusNode,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,

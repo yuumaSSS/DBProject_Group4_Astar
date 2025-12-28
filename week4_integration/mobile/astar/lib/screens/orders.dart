@@ -208,14 +208,14 @@ class _OrdersScreenState extends State<OrdersScreen>
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center, // Center vertical
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // IMAGE SECTION
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: CachedNetworkImage(
               imageUrl: o.imageUrl,
-              width: 80, // Sedikit diperbesar
+              width: 80,
               height: 80,
               fit: BoxFit.cover,
               errorWidget: (c, u, e) => Container(
@@ -342,7 +342,6 @@ class _OrdersScreenState extends State<OrdersScreen>
     );
   }
 
-  // Helper Widget untuk tombol agar konsisten dan rapi
   Widget _actionButton({
     required bool d,
     required Color color,
@@ -357,12 +356,12 @@ class _OrdersScreenState extends State<OrdersScreen>
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          width: 85, // Lebar tetap agar tombol sejajar
+          width: 85,
           padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: isOutlined
-                ? color.withAlpha(20) // Background tipis untuk Cancel
-                : color, // Background solid untuk Main Action
+                ? color.withAlpha(20)
+                : color,
             borderRadius: BorderRadius.circular(8),
             border: isOutlined
                 ? Border.all(color: color.withAlpha(100), width: 1)
