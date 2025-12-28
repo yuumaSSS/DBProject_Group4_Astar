@@ -72,7 +72,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		
 		ar.Get("/orders", h.HandleListOrders)
 		ar.Post("/orders", h.HandleCreateOrder)
-		ar.Post("/orders/{id}/status", h.HandleUpdateOrderStatus)
+		ar.Put("/orders/{id}/status", h.HandleUpdateOrderStatus)
 	})
 
 	router.ServeHTTP(w, r)

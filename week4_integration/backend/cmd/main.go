@@ -51,7 +51,7 @@ func main() {
 
 		r.Get("/orders", h.HandleListOrders)
 		r.Post("/orders", h.HandleCreateOrder)
-		r.Post("/orders/{id}/status", h.HandleUpdateOrderStatus)
+		r.Put("/orders/{id}/status", h.HandleUpdateOrderStatus)
 	})
 
 	log.Println("Server running on port 8080")
