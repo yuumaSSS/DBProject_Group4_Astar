@@ -358,6 +358,7 @@ class _ProductFormOverlayState extends State<ProductFormOverlay> {
               : [],
         ),
         child: TextFormField(
+          cursorColor: const Color(0xFF5B6EE1),
           controller: controller,
           focusNode: focusNode,
           maxLines: maxLines,

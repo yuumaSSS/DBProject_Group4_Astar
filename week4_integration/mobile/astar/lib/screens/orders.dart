@@ -15,8 +15,7 @@ class OrdersScreen extends StatefulWidget {
   State<OrdersScreen> createState() => _OrdersScreenState();
 }
 
-class _OrdersScreenState extends State<OrdersScreen>
-    with AutomaticKeepAliveClientMixin {
+class _OrdersScreenState extends State<OrdersScreen> {
   final ApiService _apiService = ApiService();
   List<Order> _allOrders = [];
   List<Product> _allProducts = [];
@@ -24,9 +23,6 @@ class _OrdersScreenState extends State<OrdersScreen>
   int _doneCount = 0;
   int _canceledCount = 0;
   bool _isLoading = false;
-
-  @override
-  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -116,7 +112,6 @@ class _OrdersScreenState extends State<OrdersScreen>
   @override
   Widget build(BuildContext context) {
     final bool dark = Theme.of(context).brightness == Brightness.dark;
-    super.build(context);
     return Scaffold(
       backgroundColor: dark ? const Color(0xFF0F111A) : Colors.white,
       floatingActionButton: FloatingActionButton(
@@ -124,28 +119,22 @@ class _OrdersScreenState extends State<OrdersScreen>
         onPressed: _openForm,
         child: const Icon(Icons.add_shopping_cart, color: Colors.white),
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadData,
-        child: Column(
-          children: [
-            Header(title: 'Orders', dark: dark),
-            _buildSummary(dark),
-            Expanded(
-              child: _isLoading && _displayOrders.isEmpty
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFF5B6EE1),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: _displayOrders.length,
-                      itemBuilder: (context, i) =>
-                          _card(_displayOrders[i], dark),
-                    ),
-            ),
-          ],
-        ),
+      body: Column(
+        children: [
+          Header(title: 'Orders', dark: dark),
+          _buildSummary(dark),
+          Expanded(
+            child: _isLoading && _displayOrders.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF5B6EE1)),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _displayOrders.length,
+                    itemBuilder: (context, i) => _card(_displayOrders[i], dark),
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -208,14 +197,13 @@ class _OrdersScreenState extends State<OrdersScreen>
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center, // Center vertical
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // IMAGE SECTION
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: CachedNetworkImage(
               imageUrl: o.imageUrl,
-              width: 80, // Sedikit diperbesar
+              width: 80,
               height: 80,
               fit: BoxFit.cover,
               errorWidget: (c, u, e) => Container(
@@ -229,8 +217,6 @@ class _OrdersScreenState extends State<OrdersScreen>
             ),
           ),
           const SizedBox(width: 12),
-
-          // INFO SECTION
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,14 +279,10 @@ class _OrdersScreenState extends State<OrdersScreen>
               ],
             ),
           ),
-
           const SizedBox(width: 8),
-
-          // ACTION BUTTONS SECTION
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Main Action Button (Process / Done)
               _actionButton(
                 d: d,
                 color: isPending
@@ -318,10 +300,7 @@ class _OrdersScreenState extends State<OrdersScreen>
                       .then((_) => _loadData());
                 },
               ),
-
               const SizedBox(height: 8),
-
-              // Cancel Button
               _actionButton(
                 d: d,
                 color: Colors.redAccent,
@@ -342,7 +321,6 @@ class _OrdersScreenState extends State<OrdersScreen>
     );
   }
 
-  // Helper Widget untuk tombol agar konsisten dan rapi
   Widget _actionButton({
     required bool d,
     required Color color,
@@ -357,12 +335,10 @@ class _OrdersScreenState extends State<OrdersScreen>
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          width: 85, // Lebar tetap agar tombol sejajar
+          width: 85,
           padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
-            color: isOutlined
-                ? color.withAlpha(20) // Background tipis untuk Cancel
-                : color, // Background solid untuk Main Action
+            color: isOutlined ? color.withAlpha(20) : color,
             borderRadius: BorderRadius.circular(8),
             border: isOutlined
                 ? Border.all(color: color.withAlpha(100), width: 1)

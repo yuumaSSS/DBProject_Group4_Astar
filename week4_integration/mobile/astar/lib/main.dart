@@ -81,7 +81,7 @@ final GoRouter _router = GoRouter(
             ),
           ],
         ),
-        
+
         StatefulShellBranch(
           routes: [
             GoRoute(

@@ -21,8 +21,7 @@ class ApiService {
   }
 
   Future<String> uploadImage(File file, String productName) async {
-    final fileName =
-        '$productName.webp';
+    final fileName = '$productName.webp';
     await _supabase.storage.from('products').upload(fileName, file);
     return _supabase.storage.from('products').getPublicUrl(fileName);
   }
@@ -73,7 +72,6 @@ class ApiService {
   Future<void> createOrder(Map<String, dynamic> data) async {
     final url = Uri.parse('$baseUrl/api/admin/orders');
 
-    // DEBUG: Cek apa yang dikirim
     debugPrint("SENDING PAYLOAD: ${jsonEncode(data)}");
 
     final response = await http.post(
@@ -82,7 +80,6 @@ class ApiService {
       body: jsonEncode(data),
     );
 
-    // DEBUG: Cek apa balasan server
     if (response.statusCode != 200 && response.statusCode != 201) {
       debugPrint("SERVER ERROR BODY: ${response.body}");
       throw Exception("Server Error: ${response.body}");
