@@ -88,7 +88,7 @@ class ApiService {
 
   Future<void> updateOrderStatus(int id, String status) async {
     final url = Uri.parse('$baseUrl/api/admin/orders/$id/status');
-    await http.post(
+    await http.put(
       url,
       headers: _getHeaders(),
       body: jsonEncode({"status": status.toLowerCase()}),
